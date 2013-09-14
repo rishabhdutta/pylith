@@ -70,7 +70,7 @@ public :
    */
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -81,7 +81,7 @@ public :
    */
   void integrateJacobian(topology::Jacobian* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
   
   /** Verify configuration is acceptable.
    *
@@ -97,7 +97,7 @@ public :
    * @returns Vertex field.
    */
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields* fields =0);
+				     const topology::Fields* fields =0);
   
   /** Get cell field associated with integrator.
    *
@@ -107,7 +107,7 @@ public :
    * @returns Cell field.
    */
   const topology::Field& cellField(const char* name,
-				   const topology::SolutionFields* fields =0);
+				   const topology::Fields* fields =0);
 
   // NOT IMPLEMENTED ////////////////////////////////////////////////////
 private :

@@ -82,7 +82,7 @@ pylith::bc::DirichletBoundary::initialize(const topology::Mesh& mesh,
 // Get vertex field of BC initial or rate of change of values.
 const pylith::topology::Field&
 pylith::bc::DirichletBoundary::vertexField(const char* name,
-					   const topology::SolutionFields& fields)
+					   const topology::Fields& fields)
 { // getVertexField
   PYLITH_METHOD_BEGIN;
 

@@ -21,7 +21,7 @@
 #include "TestClosure.hh" // implementation of class methods
 
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 
 #include "pylith/utils/array.hh" // USES double_array
 #include "pylith/utils/EventLogger.hh" // USES EventLogger
@@ -103,7 +103,7 @@ pylith::playpen::TestClosure::testRestrictClosure(const pylith::topology::Mesh& 
 						&coordsCell[0]);
 #if defined(SEPARATE_FIELDS)
   // Create fields
-  pylith::topology::SolutionFields fields(mesh);
+  pylith::topology::Fields fields(mesh);
   fields.add("field A", "field_A");
   fields.add("field B", "field_B");
   topology::Field<topology::Mesh>& fieldA = fields.get("field A");

@@ -128,7 +128,7 @@ public :
   virtual
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator that require assembly across processors.
@@ -140,7 +140,7 @@ public :
   virtual
   void integrateJacobian(topology::Jacobian* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator that require assembly processors.
@@ -152,7 +152,7 @@ public :
   virtual
   void integrateJacobian(topology::Field* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Compute custom fault precoditioner using Schur complement.
    *
@@ -168,7 +168,7 @@ public :
   virtual
   void calcPreconditioner(PetscMat* const precondMatrix,
 			  topology::Jacobian* const jacobian,
-			  topology::SolutionFields* const fields);
+			  topology::Fields* const fields);
 
   /** Adjust solution from solver with lumped Jacobian to match Lagrange
    *  multiplier constraints.
@@ -178,7 +178,7 @@ public :
    * @param jacobian Jacobian of the system.
    */
   virtual
-  void adjustSolnLumped(topology::SolutionFields* fields,
+  void adjustSolnLumped(topology::Fields* fields,
 			const PylithScalar t,
 			const topology::Field& jacobian);
 
@@ -204,7 +204,7 @@ public :
    */
   const topology::Field&
   cellField(const char* name,
-	    const topology::SolutionFields* fields =0);
+	    const topology::Fields* fields =0);
 
   /** Transform field from local (fault) coordinate system to
    * global coordinate system.
@@ -276,7 +276,7 @@ protected :
   void _getJacobianSubmatrixNP(PetscMat* submatrix,
 			       std::map<int,int>* mapGlobalToLocal,
 			       const topology::Jacobian& jacobian,
-			       const topology::SolutionFields& fields);
+			       const topology::Fields& fields);
 
   // PRIVATE METHODS ////////////////////////////////////////////////////
 private :

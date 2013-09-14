@@ -156,7 +156,7 @@ public :
    */
   virtual
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields* fields =0) = 0;
+				     const topology::Fields* fields =0) = 0;
 
   /** Get cell field associated with integrator.
    *
@@ -166,7 +166,7 @@ public :
    */
   virtual
   const topology::Field& cellField(const char* name,
-				   const topology::SolutionFields* fields =0) = 0;
+				   const topology::Fields* fields =0) = 0;
 
   // NOT IMPLEMENTED ////////////////////////////////////////////////////
 private :

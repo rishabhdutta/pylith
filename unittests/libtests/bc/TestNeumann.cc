@@ -31,7 +31,7 @@
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/meshio/MeshIOAscii.hh" // USES MeshIOAscii
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 
 #include "spatialdata/geocoords/CSCart.hh" // USES CSCart
 #include "spatialdata/spatialdb/SimpleDB.hh" // USES SimpleDB
@@ -164,7 +164,7 @@ pylith::bc::TestNeumann::testInitialize(void)
 
   topology::Mesh mesh;
   Neumann bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   const topology::Mesh& boundaryMesh = *bc._boundaryMesh;
@@ -252,7 +252,7 @@ pylith::bc::TestNeumann::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   Neumann bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   topology::Field& residual = fields.get("residual");
@@ -729,7 +729,7 @@ pylith::bc::TestNeumann::_preinitialize(topology::Mesh* mesh,
 void
 pylith::bc::TestNeumann::_initialize(topology::Mesh* mesh,
 				     Neumann* const bc,
-				     topology::SolutionFields* fields) const
+				     topology::Fields* fields) const
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -756,8 +756,7 @@ pylith::bc::TestNeumann::_initialize(topology::Mesh* mesh,
   // Set up fields
   CPPUNIT_ASSERT(fields);
   fields->add("residual", "residual");
-  fields->add("disp(t), bc(t+dt)", "displacement");
-  fields->solutionName("disp(t), bc(t+dt)");
+  fields->add("soln(t)", "solution");
 
   topology::Field& residual = fields->get("residual");
   residual.newSection(topology::FieldBase::VERTICES_FIELD, _data->spaceDim);

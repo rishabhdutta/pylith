@@ -69,7 +69,7 @@ public :
    * @returns Field over vertices.
    */
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields& fields);
+				     const topology::Fields& fields);
 
   // PRIVATE METHODS ////////////////////////////////////////////////////
 private :

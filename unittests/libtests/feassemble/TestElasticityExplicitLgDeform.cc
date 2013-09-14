@@ -29,7 +29,7 @@
 #include "pylith/topology/MeshOps.hh" // USES MeshOps::nondimensionalize()
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 
 #include "spatialdata/geocoords/CSCart.hh" // USES CSCart
@@ -96,7 +96,7 @@ pylith::feassemble::TestElasticityExplicitLgDeform::testInitialize(void)
 
   topology::Mesh mesh;
   ElasticityExplicitLgDeform integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   PYLITH_METHOD_END;
@@ -113,7 +113,7 @@ pylith::feassemble::TestElasticityExplicitLgDeform::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   ElasticityExplicitLgDeform integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   topology::Field& residual = fields.get("residual");
@@ -168,7 +168,7 @@ pylith::feassemble::TestElasticityExplicitLgDeform::testIntegrateJacobian(void)
 
   topology::Mesh mesh;
   ElasticityExplicitLgDeform integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
   integrator._needNewJacobian = true;
 
@@ -232,7 +232,7 @@ pylith::feassemble::TestElasticityExplicitLgDeform::testUpdateStateVars(void)
 
   topology::Mesh mesh;
   ElasticityExplicitLgDeform integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   const PylithScalar t = 1.0;
@@ -245,7 +245,7 @@ pylith::feassemble::TestElasticityExplicitLgDeform::testUpdateStateVars(void)
 void
 pylith::feassemble::TestElasticityExplicitLgDeform::_initialize(topology::Mesh* mesh,
 								ElasticityExplicitLgDeform* const integrator,
-								topology::SolutionFields* fields)
+								topology::Fields* fields)
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -320,12 +320,11 @@ pylith::feassemble::TestElasticityExplicitLgDeform::_initialize(topology::Mesh* 
   // Setup fields
   CPPUNIT_ASSERT(fields);
   fields->add("residual", "residual");
-  fields->add("disp(t)", "displacement");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->add("disp(t-dt)", "displacement");
-  fields->add("velocity(t)", "velocity");
-  fields->add("acceleration(t)", "acceleration");
-  fields->solutionName("dispIncr(t->t+dt)");
+  fields->add("soln(t)", "solution");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
+  fields->add("soln(t-dt)", "solution_previous");
+  fields->add("solnDeriv1(t)", "solution_deriv1");
+  fields->add("solnDeriv2(t)", "solution_deriv2");
   
   topology::Field& residual = fields->get("residual");
   residual.newSection(topology::FieldBase::VERTICES_FIELD, spaceDim);
@@ -333,19 +332,19 @@ pylith::feassemble::TestElasticityExplicitLgDeform::_initialize(topology::Mesh* 
   residual.zero();
   fields->copyLayout("residual");
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   PetscScalar* dispTArray = dispTVisitor.localArray();CPPUNIT_ASSERT(dispTArray);
 
-  topology::VecVisitorMesh dispTmdtVisitor(fields->get("disp(t-dt)"));
+  topology::VecVisitorMesh dispTmdtVisitor(fields->get("soln(t-dt)"));
   PetscScalar* dispTmdtArray = dispTmdtVisitor.localArray();CPPUNIT_ASSERT(dispTmdtArray);
 
-  topology::VecVisitorMesh dispTIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();CPPUNIT_ASSERT(dispTIncrArray);
 
-  topology::VecVisitorMesh velVisitor(fields->get("velocity(t)"));
+  topology::VecVisitorMesh velVisitor(fields->get("solnDeriv1(t)"));
   PetscScalar* velArray = velVisitor.localArray();CPPUNIT_ASSERT(velArray);
 
-  topology::VecVisitorMesh accVisitor(fields->get("acceleration(t)"));
+  topology::VecVisitorMesh accVisitor(fields->get("solnDeriv2(t)"));
   PetscScalar* accArray = accVisitor.localArray();CPPUNIT_ASSERT(accArray);
 
   topology::Stratum verticesStratum(dmMesh, topology::Stratum::DEPTH, 0);

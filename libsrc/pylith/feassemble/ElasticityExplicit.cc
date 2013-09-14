@@ -25,7 +25,7 @@
 
 #include "pylith/materials/ElasticMaterial.hh" // USES ElasticMaterial
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
@@ -132,7 +132,7 @@ pylith::feassemble::ElasticityExplicit::normViscosity(const PylithScalar viscosi
 void
 pylith::feassemble::ElasticityExplicit::integrateResidual(const topology::Field& residual,
 							  const PylithScalar t,
-							  topology::SolutionFields* const fields)
+							  topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
   
@@ -213,14 +213,14 @@ pylith::feassemble::ElasticityExplicit::integrateResidual(const topology::Field&
 
   // Setup field visitors.
   scalar_array accCell(numBasis*spaceDim);
-  topology::VecVisitorMesh accVisitor(fields->get("acceleration(t)"));
+  topology::VecVisitorMesh accVisitor(fields->get("solnDeriv2(t)"));
 
   scalar_array velCell(numBasis*spaceDim);
-  topology::VecVisitorMesh velVisitor(fields->get("velocity(t)"));
+  topology::VecVisitorMesh velVisitor(fields->get("solnDeriv1(t)"));
 
   scalar_array dispCell(numBasis*spaceDim);
   scalar_array dispAdjCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
   
   topology::VecVisitorMesh residualVisitor(residual);
 
@@ -383,7 +383,7 @@ pylith::feassemble::ElasticityExplicit::integrateResidual(const topology::Field&
 void
 pylith::feassemble::ElasticityExplicit::integrateJacobian(topology::Jacobian* jacobian,
 							  const PylithScalar t,
-							  topology::SolutionFields* fields)
+							  topology::Fields* fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
   
@@ -397,7 +397,7 @@ pylith::feassemble::ElasticityExplicit::integrateJacobian(topology::Jacobian* ja
 void
 pylith::feassemble::ElasticityExplicit::integrateJacobian(topology::Field* jacobian,
 							  const PylithScalar t,
-							  topology::SolutionFields* fields)
+							  topology::Fields* fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
   

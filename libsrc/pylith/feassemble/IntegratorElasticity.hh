@@ -94,7 +94,7 @@ public :
    * @param mesh Finite-element mesh
    */
   void updateStateVars(const PylithScalar t,
-		       topology::SolutionFields* const fields);
+		       topology::Fields* const fields);
 
   /** Verify configuration is acceptable.
    *
@@ -118,7 +118,7 @@ public :
    */
   const topology::Field& cellField(const char* name,
 				   const topology::Mesh& mesh,
-				   topology::SolutionFields* const fields =0);
+				   topology::Fields* const fields =0);
 
 // PROTECTED METHODS ////////////////////////////////////////////////////
 protected :
@@ -141,7 +141,7 @@ protected :
   virtual
   void _calcStrainStressField(topology::Field* field,
 			      const char* name,
-			      topology::SolutionFields* const fields);
+			      topology::Fields* const fields);
 
   /** Calculate stress field from total strain field. Stress field
    * replaces strain field in section.

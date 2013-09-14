@@ -66,7 +66,7 @@ namespace pylith {
        * @param mesh Finite-element mesh
        */
       void updateStateVars(const PylithScalar t,
-			   pylith::topology::SolutionFields* const fields);
+			   pylith::topology::Fields* const fields);
       
       /** Verify configuration is acceptable.
        *
@@ -84,7 +84,7 @@ namespace pylith {
        */
       const pylith::topology::Field& cellField(const char* name,
 					       const pylith::topology::Mesh& mesh,
-					       pylith::topology::SolutionFields* const fields =0);
+					       pylith::topology::Fields* const fields =0);
       
       /** Get output fields.
        *

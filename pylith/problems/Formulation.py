@@ -50,6 +50,15 @@ def outputFactory(name):
   return facility(name, family="output_manager", factory=OutputSoln)
 
 
+def solnFieldsFactory(name):
+  """
+  Factory for material items.
+  """
+  from pyre.inventory import facility
+  from pylith.feassemble.Discretization import Discretization
+  return facility(name, family="discretization", factory=Discretization)
+
+
 # Formulation class
 class Formulation(PetscComponent, ModuleFormulation):
   """
@@ -74,11 +83,12 @@ class Formulation(PetscComponent, ModuleFormulation):
     ## \b Properties
     ## @li \b use_cuda Enable use of CUDA for finite-element integrations.
     ## @li \b matrix_type Type of PETSc sparse matrix.
-    ## @li \b split_fields Split solution fields into displacements and Lagrange constraints.
+    ## @li \b split_fields Split solution fields into solution and Lagrange constraints.
     ## @li \b use_custom_constraint_pc Use custom preconditioner for Lagrange constraints.
     ## @li \b view_jacobian Flag to output Jacobian matrix when it is reformed.
     ##
     ## \b Facilities
+    ## @li \b soln_fields Discretizations for fields in solution.
     ## @li \b time_step Time step size manager.
     ## @li \b solver Algebraic solver.
     ## @li \b output Output manager associated with solution.
@@ -91,47 +101,41 @@ class Formulation(PetscComponent, ModuleFormulation):
                                   validator=validateUseCUDA)
     useCUDA.meta['tip'] = "Enable use of CUDA for finite-element integrations."
     
-
     matrixType = pyre.inventory.str("matrix_type", default="unknown")
     matrixType.meta['tip'] = "Type of PETSc sparse matrix."
 
     useSplitFields = pyre.inventory.bool("split_fields", default=False)
-    useSplitFields.meta['tip'] = "Split solution fields into displacements "\
+    useSplitFields.meta['tip'] = "Split solution fields into solution "\
         "and Lagrange multipliers for separate preconditioning."
 
-    useCustomConstraintPC = pyre.inventory.bool("use_custom_constraint_pc",
-                                                default=False)
-    useCustomConstraintPC.meta['tip'] = "Use custom preconditioner for " \
-                                        "Lagrange constraints."
+    useCustomConstraintPC = pyre.inventory.bool("use_custom_constraint_pc", default=False)
+    useCustomConstraintPC.meta['tip'] = "Use custom preconditioner for Lagrange constraints."
 
     viewJacobian = pyre.inventory.bool("view_jacobian", default=False)
     viewJacobian.meta['tip'] = "Write Jacobian matrix to binary file."
     
+    from pylith.problems.FieldsElasticity import FieldsElasticity
+    solnFields = pyre.inventory.facilityArray("soln_fields", itemFactory=fieldsFactory, factory=FieldsElasticity)
+    solnFields.meta['tip'] = "Discretizations for fields in solution."
+    
     from TimeStepUniform import TimeStepUniform
-    timeStep = pyre.inventory.facility("time_step", family="time_step",
-                                       factory=TimeStepUniform)
+    timeStep = pyre.inventory.facility("time_step", family="time_step", factory=TimeStepUniform)
     timeStep.meta['tip'] = "Time step size manager."
 
     from SolverLinear import SolverLinear
-    solver = pyre.inventory.facility("solver", family="solver",
-                                     factory=SolverLinear)
+    solver = pyre.inventory.facility("solver", family="solver", factory=SolverLinear)
     solver.meta['tip'] = "Algebraic solver."
 
     from pylith.meshio.SingleOutput import SingleOutput
-    output = pyre.inventory.facilityArray("output",
-                                          itemFactory=outputFactory,
-                                          factory=SingleOutput)
+    output = pyre.inventory.facilityArray("output", itemFactory=outputFactory, factory=SingleOutput)
     output.meta['tip'] = "Output managers associated with solution."
 
     from pylith.topology.JacobianViewer import JacobianViewer
-    jacobianViewer = pyre.inventory.facility("jacobian_viewer", 
-                                             family="jacobian_viewer",
-                                             factory=JacobianViewer)
+    jacobianViewer = pyre.inventory.facility("jacobian_viewer", family="jacobian_viewer", factory=JacobianViewer)
     jacobianViewer.meta['tip'] = "Writer for Jacobian sparse matrix."
 
     from pylith.perf.MemoryLogger import MemoryLogger
-    perfLogger = pyre.inventory.facility("perf_logger", family="perf_logger",
-                                         factory=MemoryLogger)
+    perfLogger = pyre.inventory.facility("perf_logger", family="perf_logger", factory=MemoryLogger)
     perfLogger.meta['tip'] = "Performance and memory logging."
 
 
@@ -313,6 +317,7 @@ class Formulation(PetscComponent, ModuleFormulation):
     PetscComponent._configure(self)
     self.useCUDA = self.inventory.useCUDA
     self.matrixType = self.inventory.matrixType
+    self.solnFields = self.inventory.solnFields
     self.timeStep = self.inventory.timeStep
     self.solver = self.inventory.solver
     self.output = self.inventory.output
@@ -476,8 +481,8 @@ class Formulation(PetscComponent, ModuleFormulation):
     numTimeSteps = self.timeStep.numTimeSteps()
     totalTime = self.timeStep.totalTime
 
-    from pylith.topology.SolutionFields import SolutionFields
-    self.fields = SolutionFields(self.mesh())
+    from pylith.topology.Fields import Fields
+    self.fields = Fields(self.mesh())
     self._debug.log(resourceUsageString())
 
     if 0 == comm.rank:
@@ -510,23 +515,27 @@ class Formulation(PetscComponent, ModuleFormulation):
     #memoryLogger = MemoryLogger.singleton()
     #memoryLogger.setDebug(0)
     #memoryLogger.stagePush("Problem")
-    self.fields.add("dispIncr(t->t+dt)", "displacement_increment")
-    self.fields.add("disp(t)", "displacement")
+    self.fields.add("solnIncr(t->t+dt)", "solution_increment")
+    self.fields.add("soln(t)", "solution")
     self.fields.add("residual", "residual")
-    self.fields.solutionName("dispIncr(t->t+dt)")
 
     lengthScale = normalizer.lengthScale()
     if 1:
-      solution = self.fields.get("dispIncr(t->t+dt)")
-      solution.addField("displacement", dimension)
+      soln = self.fields.get("solnIncr(t->t+dt)")
+      self.solnFields.initialize(dimension)
+      solnDispField = None
+      for f in self.solnFields.components():
+          soln.addField(f.name, f.discretization.dimension, f.discretization.basisOrder)
+          if "displacement" == f.name:
+              solnDispField = f
       if self.splitFields():
-        solution.addField("lagrange_multipliers", dimension)
-      solution.setupFields()
-      solution.newSection(solution.VERTICES_FIELD, dimension)
-      solution.updateDof("displacement", solution.VERTICES_FIELD, dimension)
-
-      solution.vectorFieldType(solution.VECTOR)
-      solution.scale(lengthScale.value)
+        if f:
+          soln.addField("lagrange_multipliers", dimension, f.discretization.basisOrder)
+        else:
+            raise ValueError("Cannot split fields. Splitting fields requires a displacement field, "
+                             "but solution does not contain 'displacement' field.")
+      soln.setupFields()
+      soln.vectorFieldType(soln.OTHER)
     else:
       solution.addField("displacement", dimension)
       if self.splitFields():
@@ -542,28 +551,26 @@ class Formulation(PetscComponent, ModuleFormulation):
 
     if self.splitFields():
       for integrator in self.integrators:
-        integrator.splitField(solution)
+        integrator.splitField(soln)
     for constraint in self.constraints:
-      constraint.setConstraintSizes(solution)
-    solution.allocate()
+      constraint.setConstraintSizes(soln)
+    soln.allocate()
     for constraint in self.constraints:
-      constraint.setConstraints(solution)
+      constraint.setConstraints(soln)
     for integrator in self.integrators:
-      integrator.checkConstraints(solution)
+      integrator.checkConstraints(soln)
 
     #memoryLogger.stagePop()
 
     # This also creates a global order.
-    solution.createScatter(solution.mesh())
+    soln.createScatter(soln.mesh())
 
     #memoryLogger.stagePush("Problem")
-    dispT = self.fields.get("disp(t)")
-    dispT.vectorFieldType(dispT.VECTOR)
-    dispT.scale(lengthScale.value)
+    solnT = self.fields.get("soln(t)")
+    solnT.vectorFieldType(solnT.OTHER)
 
     residual = self.fields.get("residual")
-    residual.vectorFieldType(residual.VECTOR)
-    residual.scale(lengthScale.value)
+    residual.vectorFieldType(residual.OTHER)
 
     #memoryLogger.stagePop()
     #memoryLogger.setDebug(0)

@@ -29,7 +29,7 @@
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/feassemble/Quadrature.hh" // USES Quadrature
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/meshio/MeshIOAscii.hh" // USES MeshIOAscii
 
 #include "spatialdata/geocoords/CSCart.hh" // USES CSCart
@@ -149,7 +149,7 @@ pylith::faults::TestFaultCohesiveImpulses::testNumImpulses(void)
 
   topology::Mesh mesh;
   FaultCohesiveImpulses fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   const int ncomps = 2;
@@ -170,7 +170,7 @@ pylith::faults::TestFaultCohesiveImpulses::testInitialize(void)
 
   topology::Mesh mesh;
   FaultCohesiveImpulses fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   PetscDM dmMesh = fault._faultMesh->dmMesh();CPPUNIT_ASSERT(dmMesh);
@@ -245,7 +245,7 @@ pylith::faults::TestFaultCohesiveImpulses::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   FaultCohesiveImpulses fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   const int spaceDim = _data->spaceDim;
@@ -255,7 +255,7 @@ pylith::faults::TestFaultCohesiveImpulses::testIntegrateResidual(void)
   const PetscInt vStart = verticesStratum.begin();
   const PetscInt vEnd = verticesStratum.end();
 
-  topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
   PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
 
   for(PetscInt v = vStart, iVertex=0; v < vEnd; ++v, ++iVertex) {
@@ -303,7 +303,7 @@ pylith::faults::TestFaultCohesiveImpulses::testIntegrateResidual(void)
 void
 pylith::faults::TestFaultCohesiveImpulses::_initialize(topology::Mesh* const mesh,
 						       FaultCohesiveImpulses* const fault,
-						       topology::SolutionFields* const fields)
+						       topology::Fields* const fields)
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -370,17 +370,16 @@ pylith::faults::TestFaultCohesiveImpulses::_initialize(topology::Mesh* const mes
   fault->initialize(*mesh, upDir);
   
   // Setup fields
-  fields->add("disp(t)", "displacement");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->add("velocity(t)", "velocity");
+  fields->add("soln(t)", "solution");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
+  fields->add("solnDeriv1(t)", "solution_deriv1");
   fields->add("residual", "residual");
-  fields->solutionName("dispIncr(t->t+dt)");
   
   const int spaceDim = _data->spaceDim;
-  topology::Field& disp = fields->get("disp(t)");
+  topology::Field& disp = fields->get("soln(t)");
   disp.newSection(topology::FieldBase::VERTICES_FIELD, spaceDim);
   disp.allocate();
-  fields->copyLayout("disp(t)");
+  fields->copyLayout("soln(t)");
 
   fault->verifyConfiguration(*mesh);
 

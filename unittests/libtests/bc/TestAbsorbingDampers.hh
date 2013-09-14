@@ -97,7 +97,7 @@ private :
    */
   void _initialize(topology::Mesh* mesh,
 		   AbsorbingDampers* const bc,
-		   topology::SolutionFields* fields) const;
+		   topology::Fields* fields) const;
 
 }; // class TestAbsorbingDampers
 

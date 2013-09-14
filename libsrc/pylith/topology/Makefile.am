@@ -32,7 +32,6 @@ subpkginclude_HEADERS = \
 	Mesh.icc \
 	MeshOps.hh \
 	ReverseCuthillMcKee.hh \
-	SolutionFields.hh \
 	Stratum.hh \
 	Stratum.icc \
 	VisitorMesh.hh \

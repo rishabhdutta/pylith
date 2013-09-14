@@ -28,7 +28,7 @@
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/VisitorMesh.hh" // USES VisitorMesh
 #include "pylith/topology/VisitorSubMesh.hh" // USES SubMeshIS
 #include "pylith/topology/Stratum.hh" // USES Stratum
@@ -164,7 +164,7 @@ pylith::faults::FaultCohesiveLagrange::splitField(topology::Field* field)
 void
 pylith::faults::FaultCohesiveLagrange::integrateResidual(const topology::Field& residual,
 							 const PylithScalar t,
-							 topology::SolutionFields* const fields)
+							 topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -201,11 +201,11 @@ pylith::faults::FaultCohesiveLagrange::integrateResidual(const topology::Field& 
   topology::VecVisitorMesh residualVisitor(residual);
   PetscScalar* residualArray = residualVisitor.localArray();
 
-  topology::Field& dispT = fields->get("disp(t)");
+  topology::Field& dispT = fields->get("soln(t)");
   topology::VecVisitorMesh dispTVisitor(dispT);
   PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::Field& dispTIncr = fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispTIncr = fields->get("solnIncr(t->t+dt)");
   topology::VecVisitorMesh dispTIncrVisitor(dispTIncr);
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
@@ -252,7 +252,7 @@ pylith::faults::FaultCohesiveLagrange::integrateResidual(const topology::Field& 
     assert(1 == areaVisitor.sectionDof(v_fault));
     const PylithScalar areaValue = areaArray[aoff];
 
-    // Get disp(t) at conventional vertices and Lagrange vertex.
+    // Get soln(t) at conventional vertices and Lagrange vertex.
     const PetscInt dtnoff = dispTVisitor.sectionOffset(v_negative);
     assert(spaceDim == dispTVisitor.sectionDof(v_negative));
 
@@ -262,7 +262,7 @@ pylith::faults::FaultCohesiveLagrange::integrateResidual(const topology::Field& 
     const PetscInt dtloff = dispTVisitor.sectionOffset(v_lagrange);
     assert(spaceDim == dispTVisitor.sectionDof(v_lagrange));
 
-    // Get dispIncr(t->t+dt) at conventional vertices and Lagrange vertex.
+    // Get solnIncr(t->t+dt) at conventional vertices and Lagrange vertex.
     const PetscInt dinoff = dispTIncrVisitor.sectionOffset(v_negative);
     assert(spaceDim == dispTIncrVisitor.sectionDof(v_negative));
 
@@ -312,7 +312,7 @@ pylith::faults::FaultCohesiveLagrange::integrateResidual(const topology::Field& 
 void
 pylith::faults::FaultCohesiveLagrange::integrateJacobian(topology::Jacobian* jacobian,
 							 const PylithScalar t,
-							 topology::SolutionFields* const fields)
+							 topology::Fields* const fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
 
@@ -340,8 +340,9 @@ pylith::faults::FaultCohesiveLagrange::integrateJacobian(topology::Jacobian* jac
   topology::VecVisitorMesh areaVisitor(area);
   const PetscScalar* areaArray = areaVisitor.localArray();
   
-  PetscDM solnDM = fields->solution().dmMesh();assert(solnDM);
-  PetscSection solnSection = fields->solution().petscSection();assert(solnSection);
+  topology::Field& solution = fields->get("solnIncr(t->t+dt)");
+  PetscDM solnDM = solution.dmMesh();assert(solnDM);
+  PetscSection solnSection = solution.petscSection();assert(solnSection);
   PetscSection solnGlobalSection = NULL;
   PetscErrorCode err = DMGetDefaultGlobalSection(solnDM, &solnGlobalSection);PYLITH_CHECK_ERROR(err);assert(solnGlobalSection);
 
@@ -472,7 +473,7 @@ pylith::faults::FaultCohesiveLagrange::integrateJacobian(topology::Jacobian* jac
 void
 pylith::faults::FaultCohesiveLagrange::integrateJacobian(topology::Field* jacobian,
 							 const PylithScalar t,
-							 topology::SolutionFields* const fields)
+							 topology::Fields* const fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
 
@@ -549,7 +550,7 @@ pylith::faults::FaultCohesiveLagrange::integrateJacobian(topology::Field* jacobi
 void
 pylith::faults::FaultCohesiveLagrange::calcPreconditioner(PetscMat* const precondMatrix,
 							  topology::Jacobian* const jacobian,
-							  topology::SolutionFields* const fields)
+							  topology::Fields* const fields)
 { // calcPreconditioner
   PYLITH_METHOD_BEGIN;
 
@@ -608,7 +609,7 @@ pylith::faults::FaultCohesiveLagrange::calcPreconditioner(PetscMat* const precon
   PetscSection dispGlobalSection = NULL;
   PetscErrorCode err = DMGetDefaultGlobalSection(dispDM, &dispGlobalSection);PYLITH_CHECK_ERROR(err);
 
-  PetscDM solnDM = fields->solution().dmMesh();
+  PetscDM solnDM = fields->get("solnIncr(t->t+dt)").dmMesh();
   PetscSection solnGlobalSection = NULL;
   err = DMGetDefaultGlobalSection(solnDM, &solnGlobalSection);PYLITH_CHECK_ERROR(err);
 
@@ -720,7 +721,7 @@ pylith::faults::FaultCohesiveLagrange::calcPreconditioner(PetscMat* const precon
 // Adjust solution from solver with lumped Jacobian to match Lagrange
 // multiplier constraints.
 void
-pylith::faults::FaultCohesiveLagrange::adjustSolnLumped(topology::SolutionFields* const fields,
+pylith::faults::FaultCohesiveLagrange::adjustSolnLumped(topology::Fields* const fields,
 							const PylithScalar t,
                                                         const topology::Field& jacobian)
 { // adjustSolnLumped
@@ -770,11 +771,11 @@ pylith::faults::FaultCohesiveLagrange::adjustSolnLumped(topology::SolutionFields
   topology::VecVisitorMesh residualVisitor(residual);
   const PetscScalar* residualArray = residualVisitor.localArray();
 
-  topology::Field& dispTIncr = fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispTIncr = fields->get("solnIncr(t->t+dt)");
   topology::VecVisitorMesh dispTIncrVisitor(dispTIncr);
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
-  topology::Field& dispTIncrAdj = fields->get("dispIncr adjust");
+  topology::Field& dispTIncrAdj = fields->get("solnIncr adjust");
   topology::VecVisitorMesh dispTIncrAdjVisitor(dispTIncrAdj);
   PetscScalar* dispTIncrAdjArray = dispTIncrAdjVisitor.localArray();
 
@@ -1729,7 +1730,7 @@ void
 pylith::faults::FaultCohesiveLagrange::_getJacobianSubmatrixNP(PetscMat* jacobianSub,
 							       std::map<int,int>* indicesMatToSubmat,
 							       const topology::Jacobian& jacobian,
-							       const topology::SolutionFields& fields)
+							       const topology::Fields& fields)
 { // _getJacobianSubmatrixNP
   PYLITH_METHOD_BEGIN;
 
@@ -1737,7 +1738,7 @@ pylith::faults::FaultCohesiveLagrange::_getJacobianSubmatrixNP(PetscMat* jacobia
   assert(indicesMatToSubmat);
 
   // Get global order
-  PetscDM solutionDM = fields.solution().dmMesh();
+  PetscDM solutionDM = fields.get("solnIncr(t->t+dt)").dmMesh();
   PetscSection solutionGlobalSection = NULL;
   PetscScalar *solutionArray = NULL;
 
@@ -1824,7 +1825,7 @@ pylith::faults::FaultCohesiveLagrange::_getJacobianSubmatrixNP(PetscMat* jacobia
 // Get cell field associated with integrator.
 const pylith::topology::Field&
 pylith::faults::FaultCohesiveLagrange::cellField(const char* name,
-                                                 const topology::SolutionFields* fields)
+                                                 const topology::Fields* fields)
 { // cellField
   PYLITH_METHOD_BEGIN;
 

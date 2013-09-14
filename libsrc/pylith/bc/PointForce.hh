@@ -63,7 +63,7 @@ public :
    */
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Verify configuration is acceptable.
    *

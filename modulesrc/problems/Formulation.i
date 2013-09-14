@@ -70,7 +70,7 @@ namespace pylith {
        *
        * @returns solution fields.
        */
-      const pylith::topology::SolutionFields& fields(void) const;
+      const pylith::topology::Fields& fields(void) const;
 
       /** Get flag indicating whether Jacobian is symmetric.
        *
@@ -95,7 +95,7 @@ namespace pylith {
        * @param dt Time step (nondimension).
        */
       void updateSettings(pylith::topology::Jacobian* jacobian,
-			  pylith::topology::SolutionFields* fields,
+			  pylith::topology::Fields* fields,
 			  const PylithScalar t,
 			  const PylithScalar dt);
       
@@ -109,7 +109,7 @@ namespace pylith {
        * @param dt Time step (nondimension).
        */
       void updateSettings(pylith::topology::Field* jacobian,
-			  pylith::topology::SolutionFields* fields,
+			  pylith::topology::Fields* fields,
 			  const PylithScalar t,
 			  const PylithScalar dt);
 

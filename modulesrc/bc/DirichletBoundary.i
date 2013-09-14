@@ -63,7 +63,7 @@ namespace pylith {
        */
       const pylith::topology::Field&
       vertexField(const char* name,
-		  const pylith::topology::SolutionFields& fields);
+		  const pylith::topology::Fields& fields);
       
     }; // class DirichletBoundary
     

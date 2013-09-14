@@ -20,7 +20,7 @@
 
 #include "SolverLumped.hh" // implementation of class methods
 
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VisitorMesh
@@ -58,7 +58,7 @@ pylith::problems::SolverLumped::deallocate(void)
 // ----------------------------------------------------------------------
 // Initialize solver.
 void
-pylith::problems::SolverLumped::initialize(const topology::SolutionFields& fields,
+pylith::problems::SolverLumped::initialize(const topology::Fields& fields,
 					   const topology::Field& jacobian,
 					   Formulation* formulation)
 { // initialize

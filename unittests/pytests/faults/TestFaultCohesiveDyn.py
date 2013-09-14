@@ -174,7 +174,7 @@ class TestFaultCohesiveDyn(unittest.TestCase):
     (mesh, fault, fields) = self._initialize()
 
     from pylith.topology.Jacobian import Jacobian
-    jacobian = Jacobian(fields.solution())
+    jacobian = Jacobian(fields.get("solnIncr(t->t+dt)"))
     jacobian.zero()
     t = 1.0
     fault.integrateJacobian(jacobian, t, fields)
@@ -325,13 +325,12 @@ class TestFaultCohesiveDyn(unittest.TestCase):
     fault.initialize(totalTime=0.0*s, numTimeSteps=1, normalizer=normalizer)
 
     # Setup fields
-    from pylith.topology.SolutionFields import SolutionFields
-    fields = SolutionFields(mesh)
+    from pylith.topology.Fields import Fields
+    fields = Fields(mesh)
     fields.add("residual", "residual")
-    fields.add("dispIncr(t->t+dt)", "displacement_increment")
-    fields.add("disp(t)", "displacement")
-    fields.add("velocity(t)", "velocity")
-    fields.solutionName("dispIncr(t->t+dt)")
+    fields.add("solnIncr(t->t+dt)", "solution_increment")
+    fields.add("soln(t)", "solution")
+    fields.add("solnDeriv1(t)", "solution_deriv1")
     residual = fields.get("residual")
     residual.newSection(residual.VERTICES_FIELD, cs.spaceDim())
     residual.allocate()

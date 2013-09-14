@@ -30,7 +30,7 @@
 #include "pylith/topology/MeshOps.hh" // USES MeshOps::nondimensionalize()
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 
 #include "spatialdata/geocoords/CSCart.hh" // USES CSCart
@@ -159,7 +159,7 @@ pylith::feassemble::TestElasticityImplicit::testInitialize(void)
 
   topology::Mesh mesh;
   ElasticityImplicit integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   PYLITH_METHOD_END;
@@ -176,7 +176,7 @@ pylith::feassemble::TestElasticityImplicit::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   ElasticityImplicit integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   topology::Field& residual = fields.get("residual");
@@ -232,11 +232,11 @@ pylith::feassemble::TestElasticityImplicit::testIntegrateJacobian(void)
 
   topology::Mesh mesh;
   ElasticityImplicit integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
   integrator._needNewJacobian = true;
 
-  topology::Jacobian jacobian(fields.solution());
+  topology::Jacobian jacobian(fields.get("solnIncr(t->t+dt)"));
 
   const PylithScalar t = 1.0;
   integrator.integrateJacobian(&jacobian, t, &fields);
@@ -294,7 +294,7 @@ pylith::feassemble::TestElasticityImplicit::testUpdateStateVars(void)
 
   topology::Mesh mesh;
   ElasticityImplicit integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   const PylithScalar t = 1.0;
@@ -312,7 +312,7 @@ pylith::feassemble::TestElasticityImplicit::testStableTimeStep(void)
 
   topology::Mesh mesh;
   ElasticityImplicit integrator;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &integrator, &fields);
 
   const PylithScalar stableTimeStep = integrator.stableTimeStep(mesh);
@@ -325,7 +325,7 @@ pylith::feassemble::TestElasticityImplicit::testStableTimeStep(void)
 void
 pylith::feassemble::TestElasticityImplicit::_initialize(topology::Mesh* mesh,
 							ElasticityImplicit* const integrator,
-							topology::SolutionFields* fields)
+							topology::Fields* fields)
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -399,9 +399,8 @@ pylith::feassemble::TestElasticityImplicit::_initialize(topology::Mesh* mesh,
   // Setup fields
   CPPUNIT_ASSERT(fields);
   fields->add("residual", "residual");
-  fields->add("disp(t)", "displacement");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->solutionName("dispIncr(t->t+dt)");
+  fields->add("soln(t)", "solution");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
   
   topology::Field& residual = fields->get("residual");
   residual.newSection(topology::FieldBase::VERTICES_FIELD, _data->spaceDim);
@@ -409,10 +408,10 @@ pylith::feassemble::TestElasticityImplicit::_initialize(topology::Mesh* mesh,
   residual.zero();
   fields->copyLayout("residual");
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   PetscScalar* dispTArray = dispTVisitor.localArray();CPPUNIT_ASSERT(dispTArray);
 
-  topology::VecVisitorMesh dispTIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();CPPUNIT_ASSERT(dispTIncrArray);
 
   topology::Stratum verticesStratum(dmMesh, topology::Stratum::DEPTH, 0);

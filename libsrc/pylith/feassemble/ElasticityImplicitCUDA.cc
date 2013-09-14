@@ -31,7 +31,7 @@ extern cudaError_t cleanupKernel(float *geometry, float *elemMat, float *analyti
 
 #include "pylith/materials/ElasticMaterial.hh" // USES ElasticMaterial
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 
 #include "pylith/utils/EventLogger.hh" // USES EventLogger
@@ -109,7 +109,7 @@ void
 pylith::feassemble::ElasticityImplicitCUDA::integrateResidual(
 			  const topology::Field<topology::Mesh>& residual,
 			  const PylithScalar t,
-			  topology::SolutionFields* const fields)
+			  topology::Fields* const fields)
 { // integrateResidual
   /// Member prototype for _elasticityResidualXD()
   typedef void (pylith::feassemble::ElasticityImplicitCUDA::*elasticityResidual_fn_type)
@@ -184,7 +184,7 @@ pylith::feassemble::ElasticityImplicitCUDA::integrateResidual(
   // Get sections
   scalar_array dispTCell(numBasis*spaceDim);
   const ALE::Obj<RealSection>& dispTSection = 
-    fields->get("disp(t)").section();
+    fields->get("soln(t)").section();
   assert(!dispTSection.isNull());
   RestrictVisitor dispTVisitor(*dispTSection, dispTCell.size(), &dispTCell[0]);
 
@@ -317,7 +317,7 @@ void
 pylith::feassemble::ElasticityImplicitCUDA::integrateJacobian(
 					topology::Jacobian* jacobian,
 					const PylithScalar t,
-					topology::SolutionFields* fields)
+					topology::Fields* fields)
 { // integrateJacobian
   /// Member prototype for _elasticityJacobianXD()
   typedef void (pylith::feassemble::ElasticityImplicitCUDA::*elasticityJacobian_fn_type)
@@ -383,7 +383,7 @@ pylith::feassemble::ElasticityImplicitCUDA::integrateJacobian(
   // Get sections
   scalar_array dispTCell(numBasis*spaceDim);
   const ALE::Obj<RealSection>& dispTSection = 
-    fields->get("disp(t)").section();
+    fields->get("soln(t)").section();
   assert(!dispTSection.isNull());
   RestrictVisitor dispTVisitor(*dispTSection, dispTCell.size(), &dispTCell[0]);
 

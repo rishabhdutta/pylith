@@ -60,7 +60,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator.
@@ -71,7 +71,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Jacobian* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
   
       /** Verify configuration is acceptable.
        *
@@ -87,7 +87,7 @@ namespace pylith {
        * @returns Vertex field.
        */
       const pylith::topology::Field& vertexField(const char* name,
-						 const pylith::topology::SolutionFields* fields =0);
+						 const pylith::topology::Fields* fields =0);
       
       /** Get cell field associated with integrator.
        *
@@ -97,7 +97,7 @@ namespace pylith {
        * @returns Cell field.
        */
       const pylith::topology::Field& cellField(const char* name,
-					       const pylith::topology::SolutionFields* fields =0);
+					       const pylith::topology::Fields* fields =0);
 
     }; // class FaultCohesiveTract
 

@@ -84,7 +84,7 @@ namespace pylith {
        * @returns Traction vector field.
        */
       const pylith::topology::Field& vertexField(const char* name,
-						 pylith::topology::SolutionFields* const fields =0);
+						 pylith::topology::Fields* const fields =0);
       
       // PROTECTED METHODS //////////////////////////////////////////////
     protected :

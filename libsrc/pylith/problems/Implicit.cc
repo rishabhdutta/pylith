@@ -20,7 +20,7 @@
 
 #include "Implicit.hh" // implementation of class methods
 
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 
@@ -51,7 +51,7 @@ pylith::problems::Implicit::calcRateFields(void)
   //        = dispIncr(t+dt) / dt
   const PylithScalar dt = _dt;
 
-  topology::Field& dispIncr = _fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispIncr = _fields->get("solnIncr(t->t+dt)");
   const spatialdata::geocoords::CoordSys* cs = dispIncr.mesh().coordsys();assert(cs);
   const int spaceDim = cs->spaceDim();
 
@@ -59,7 +59,7 @@ pylith::problems::Implicit::calcRateFields(void)
   topology::VecVisitorMesh dispIncrVisitor(dispIncr);
   PetscScalar* dispIncrArray = dispIncrVisitor.localArray();
 
-  topology::Field& velocity = _fields->get("velocity(t)");
+  topology::Field& velocity = _fields->get("soln_deriv1(t)");
   topology::VecVisitorMesh velVisitor(velocity);
   PetscScalar* velArray = velVisitor.localArray();
 

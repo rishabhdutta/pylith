@@ -20,7 +20,7 @@
 
 #include "Explicit.hh" // implementation of class methods
 
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 
@@ -57,7 +57,7 @@ pylith::problems::Explicit::calcRateFields(void)
   const PylithScalar dt2 = dt*dt;
   const PylithScalar twodt = 2.0*dt;
 
-  topology::Field& dispIncr = _fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispIncr = _fields->get("solnIncr(t->t+dt)");
   const spatialdata::geocoords::CoordSys* cs = dispIncr.mesh().coordsys();assert(cs);
   const int spaceDim = cs->spaceDim();
 
@@ -65,7 +65,7 @@ pylith::problems::Explicit::calcRateFields(void)
   topology::VecVisitorMesh dispIncrVisitor(dispIncr);
   PetscScalar* dispIncrArray = dispIncrVisitor.localArray();
 
-  topology::Field& dispT = _fields->get("disp(t)");
+  topology::Field& dispT = _fields->get("soln(t)");
   topology::VecVisitorMesh dispTVisitor(dispT);
   PetscScalar* dispTArray = dispTVisitor.localArray();
 
@@ -73,11 +73,11 @@ pylith::problems::Explicit::calcRateFields(void)
   topology::VecVisitorMesh dispTmdtVisitor(dispTmdt);
   PetscScalar* dispTmdtArray = dispTmdtVisitor.localArray();
 
-  topology::Field& velocity = _fields->get("velocity(t)");
+  topology::Field& velocity = _fields->get("soln_deriv1(t)");
   topology::VecVisitorMesh velVisitor(velocity);
   PetscScalar* velArray = velVisitor.localArray();
 
-  topology::Field& acceleration = _fields->get("acceleration(t)");
+  topology::Field& acceleration = _fields->get("soln_deriv2(t)");
   topology::VecVisitorMesh accVisitor(acceleration);
   PetscScalar* accArray = accVisitor.localArray();
 

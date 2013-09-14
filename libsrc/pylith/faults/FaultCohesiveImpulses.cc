@@ -26,7 +26,7 @@
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/topology/CoordsVisitor.hh" // USES CoordsVisitor
 
@@ -162,7 +162,7 @@ pylith::faults::FaultCohesiveImpulses::initialize(const topology::Mesh& mesh,
 void
 pylith::faults::FaultCohesiveImpulses::integrateResidual(const topology::Field& residual,
 							 const PylithScalar t,
-							 topology::SolutionFields* const fields)
+							 topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -194,7 +194,7 @@ pylith::faults::FaultCohesiveImpulses::integrateResidual(const topology::Field& 
 // Get vertex field associated with integrator.
 const pylith::topology::Field&
 pylith::faults::FaultCohesiveImpulses::vertexField(const char* name,
-						   const topology::SolutionFields* fields)
+						   const topology::Fields* fields)
 { // vertexField
   PYLITH_METHOD_BEGIN;
 
@@ -267,7 +267,7 @@ pylith::faults::FaultCohesiveImpulses::vertexField(const char* name,
 
   } else if (0 == strcasecmp("traction_change", name)) {
     assert(fields);
-    const topology::Field& dispT = fields->get("disp(t)");
+    const topology::Field& dispT = fields->get("soln(t)");
     _allocateBufferVectorField();
     topology::Field& buffer = _fields->get("buffer (vector)");
     _calcTractionsChange(&buffer, dispT);

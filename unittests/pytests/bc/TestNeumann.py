@@ -121,7 +121,7 @@ class TestNeumann(unittest.TestCase):
     (mesh, bc, fields) = self._initialize()
 
     from pylith.topology.Jacobian import Jacobian
-    jacobian = Jacobian(fields.solution())
+    jacobian = Jacobian(fields.get("solnIncr(t->t+dt)"))
     jacobian.zero()
     t = 0.24
     bc.integrateJacobian(jacobian, t, fields)
@@ -227,12 +227,11 @@ class TestNeumann(unittest.TestCase):
     bc.timeStep(0.01)
 
     # Setup fields
-    from pylith.topology.SolutionFields import SolutionFields
-    fields = SolutionFields(mesh)
+    from pylith.topology.Fields import Fields
+    fields = Fields(mesh)
     fields.add("residual", "residual")
-    fields.add("disp(t), bc(t+dt)", "displacement")
-    fields.add("dispIncr(t->t+dt)", "displacement")
-    fields.solutionName("dispIncr(t->t+dt)")
+    fields.add("soln(t)", "solution")
+    fields.add("solnIncr(t->t+dt)", "solution_increment")
 
     residual = fields.get("residual")
     residual.newSection(residual.VERTICES_FIELD, cs.spaceDim())

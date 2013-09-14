@@ -138,7 +138,7 @@ namespace pylith {
        */
       virtual
       const pylith::topology::Field& vertexField(const char* name,
-						 const pylith::topology::SolutionFields* fields =0) = 0;
+						 const pylith::topology::Fields* fields =0) = 0;
       
       /** Get cell field associated with integrator.
        *
@@ -148,7 +148,7 @@ namespace pylith {
        */
       virtual
       const pylith::topology::Field& cellField(const char* name,
-					       const pylith::topology::SolutionFields* fields =0) = 0;
+					       const pylith::topology::Fields* fields =0) = 0;
       
     }; // class Fault
     

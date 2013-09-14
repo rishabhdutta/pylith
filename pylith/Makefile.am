@@ -150,7 +150,6 @@ nobase_pkgpyexec_PYTHON = \
 	topology/Mesh.py \
 	topology/Field.py \
 	topology/Fields.py \
-	topology/SolutionFields.py \
 	topology/Jacobian.py \
 	topology/JacobianViewer.py \
 	topology/MeshGenerator.py \

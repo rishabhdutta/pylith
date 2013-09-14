@@ -66,7 +66,7 @@ public :
    */
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Verify configuration is acceptable.
    *
@@ -82,7 +82,7 @@ public :
    * @returns Traction vector at integration points.
    */
   const topology::Field& cellField(const char* name,
-				   topology::SolutionFields* const fields =0);
+				   topology::Fields* const fields =0);
 
   // PROTECTED METHODS //////////////////////////////////////////////////
 protected :

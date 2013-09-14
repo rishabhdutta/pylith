@@ -31,7 +31,7 @@
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/topology/VisitorSubMesh.hh" // USES SubMeshIS
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/feassemble/Quadrature.hh" // USES Quadrature
 #include "pylith/meshio/MeshIOAscii.hh" // USES MeshIOAscii
@@ -160,7 +160,7 @@ pylith::faults::TestFaultCohesiveKin::testInitialize(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   // Check fault mesh sizes
@@ -250,7 +250,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   const int spaceDim = _data->spaceDim;
@@ -260,7 +260,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateResidual(void)
   const PetscInt vEnd = verticesStratum.end();
 
   CPPUNIT_ASSERT(_data->fieldT);
-  topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
   PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
   for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
     const PetscInt off = dispVisitor.sectionOffset(v);
@@ -313,7 +313,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateJacobian(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   const int spaceDim = _data->spaceDim;
@@ -323,7 +323,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateJacobian(void)
   const PetscInt vEnd = verticesStratum.end();
 
   CPPUNIT_ASSERT(_data->fieldT);
-  topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
   PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
   for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
     const PetscInt off = dispVisitor.sectionOffset(v);
@@ -334,7 +334,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateJacobian(void)
   } // for
   
   const PylithScalar t = 2.134;
-  topology::Jacobian jacobian(fields.solution());
+  topology::Jacobian jacobian(fields.get("solnIncr(t->t+dt)"));
   fault.integrateJacobian(&jacobian, t, &fields);
   CPPUNIT_ASSERT_EQUAL(false, fault.needNewJacobian());
   jacobian.assemble("final_assembly");
@@ -400,7 +400,7 @@ pylith::faults::TestFaultCohesiveKin::testIntegrateJacobianLumped(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   topology::Field jacobian(mesh);
@@ -478,7 +478,7 @@ pylith::faults::TestFaultCohesiveKin::testAdjustSolnLumped(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   const int spaceDim = _data->spaceDim;
@@ -489,7 +489,7 @@ pylith::faults::TestFaultCohesiveKin::testAdjustSolnLumped(void)
 
   { // setup disp
     CPPUNIT_ASSERT(_data->fieldT);
-    topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+    topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
     PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
     for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
       const PetscInt off = dispVisitor.sectionOffset(v);
@@ -510,7 +510,7 @@ pylith::faults::TestFaultCohesiveKin::testAdjustSolnLumped(void)
 
   { // setup disp increment
     CPPUNIT_ASSERT(_data->fieldIncr);
-    topology::VecVisitorMesh dispIncrVisitor(fields.get("dispIncr(t->t+dt)"));
+    topology::VecVisitorMesh dispIncrVisitor(fields.get("solnIncr(t->t+dt)"));
     PetscScalar* dispIncrArray = dispIncrVisitor.localArray();CPPUNIT_ASSERT(dispIncrArray);
     for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
       const PetscInt off = dispIncrVisitor.sectionOffset(v);
@@ -541,9 +541,9 @@ pylith::faults::TestFaultCohesiveKin::testAdjustSolnLumped(void)
   } // setup jacobian
   jacobian.complete();
 
-  topology::Field& solution = fields.get("dispIncr(t->t+dt)");
+  topology::Field& solution = fields.get("solnIncr(t->t+dt)");
   fault.adjustSolnLumped(&fields, t, jacobian);
-  const topology::Field& dispIncrAdj = fields.get("dispIncr adjust");
+  const topology::Field& dispIncrAdj = fields.get("solnIncr adjust");
   solution += dispIncrAdj;
 
   //solution.view("SOLUTION AFTER ADJUSTMENT"); // DEBUGGING
@@ -580,7 +580,7 @@ pylith::faults::TestFaultCohesiveKin::testCalcTractionsChange(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   PetscDM dmMesh = mesh.dmMesh();CPPUNIT_ASSERT(dmMesh);
@@ -590,7 +590,7 @@ pylith::faults::TestFaultCohesiveKin::testCalcTractionsChange(void)
 
   const int spaceDim = _data->spaceDim;
   { // setup disp
-    topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+    topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
     PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
     for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
       const PetscInt off = dispVisitor.sectionOffset(v);
@@ -609,7 +609,7 @@ pylith::faults::TestFaultCohesiveKin::testCalcTractionsChange(void)
 
   const PylithScalar t = 0;
   fault.updateStateVars(t, &fields);  
-  fault._calcTractionsChange(&tractions, fields.get("disp(t)"));
+  fault._calcTractionsChange(&tractions, fields.get("soln(t)"));
 
   PetscDM faultDMMesh = fault._faultMesh->dmMesh();CPPUNIT_ASSERT(faultDMMesh);
 
@@ -620,7 +620,7 @@ pylith::faults::TestFaultCohesiveKin::testCalcTractionsChange(void)
   topology::VecVisitorMesh tractionVisitor(tractions);
   const PetscScalar* tractionArray = tractionVisitor.localArray();CPPUNIT_ASSERT(tractionArray);
 
-  topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
   const PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
 
   topology::Stratum cellsStratum(dmMesh, topology::Stratum::HEIGHT, 0);
@@ -683,10 +683,10 @@ pylith::faults::TestFaultCohesiveKin::testSplitField(void)
 
   topology::Mesh mesh;
   FaultCohesiveKin fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
-  const topology::Field& disp = fields.get("disp(t)");
+  const topology::Field& disp = fields.get("soln(t)");
   const spatialdata::geocoords::CoordSys* cs = mesh.coordsys();CPPUNIT_ASSERT(cs);
   const int spaceDim = cs->spaceDim();
 
@@ -750,7 +750,7 @@ pylith::faults::TestFaultCohesiveKin::testSplitField(void)
 void
 pylith::faults::TestFaultCohesiveKin::_initialize(topology::Mesh* const mesh,
 						  FaultCohesiveKin* const fault,
-						  topology::SolutionFields* const fields) const
+						  topology::Fields* const fields) const
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -844,10 +844,9 @@ pylith::faults::TestFaultCohesiveKin::_initialize(topology::Mesh* const mesh,
   
   // Setup fields
   fields->add("residual", "residual");
-  fields->add("disp(t)", "displacement");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->add("dispIncr adjust", "displacement_adjust");
-  fields->solutionName("dispIncr(t->t+dt)");
+  fields->add("soln(t)", "solution");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
+  fields->add("solnIncr adjust", "solution_adjust");
   
   const int spaceDim = _data->spaceDim;
   topology::Field& residual = fields->get("residual");

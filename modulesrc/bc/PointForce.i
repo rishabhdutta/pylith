@@ -56,7 +56,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Verify configuration is acceptable.
        *

@@ -28,7 +28,7 @@
 #include "pylith/topology/Mesh.hh" // USES Mesh
 #include "pylith/topology/MeshOps.hh" // USES MeshOps::nondimensionalize()
 #include "pylith/feassemble/Quadrature.hh" // USES Quadrature
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
@@ -156,7 +156,7 @@ pylith::faults::TestFaultCohesiveDyn::testInitialize(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
 
   PetscDM dmMesh = fault._faultMesh->dmMesh();CPPUNIT_ASSERT(dmMesh);
@@ -226,9 +226,12 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceStick(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
-  topology::Jacobian jacobian(fields.solution());
+
+  topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+
+  topology::Jacobian jacobian(solution);
   _setFieldsJacobian(&mesh, &fault, &fields, &jacobian, _data->fieldIncrStick);
 
   const int spaceDim = _data->spaceDim;
@@ -238,8 +241,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceStick(void)
   fault.timeStep(dt);
   fault.constrainSolnSpace(&fields, t, jacobian);
   
-  topology::Field& solution = fields.solution();
-  const topology::Field& dispIncrAdj = fields.get("dispIncr adjust");
+  const topology::Field& dispIncrAdj = fields.get("solnIncr adjust");
   solution += dispIncrAdj;
 
   fault.updateStateVars(t, &fields);
@@ -252,7 +254,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceStick(void)
     const PetscInt vStart = verticesStratum.begin();
     const PetscInt vEnd = verticesStratum.end();
 
-    topology::VecVisitorMesh dispIncrVisitor(fields.get("dispIncr(t->t+dt)"));
+    topology::VecVisitorMesh dispIncrVisitor(fields.get("solnIncr(t->t+dt)"));
     const PetscScalar* dispIncrArray = dispIncrVisitor.localArray();CPPUNIT_ASSERT(dispIncrArray);
 
     const PylithScalar* valsE = _data->fieldIncrStick;CPPUNIT_ASSERT(valsE);
@@ -315,9 +317,10 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceSlip(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
-  topology::Jacobian jacobian(fields.solution());
+  topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+  topology::Jacobian jacobian(solution);
   _setFieldsJacobian(&mesh, &fault, &fields, &jacobian, _data->fieldIncrSlip);
 
   const int spaceDim = _data->spaceDim;
@@ -327,8 +330,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceSlip(void)
   fault.timeStep(dt);
   fault.constrainSolnSpace(&fields, t, jacobian);
 
-  topology::Field& solution = fields.solution();
-  const topology::Field& dispIncrAdj = fields.get("dispIncr adjust");
+  const topology::Field& dispIncrAdj = fields.get("solnIncr adjust");
   solution += dispIncrAdj;
 
   fault.updateStateVars(t, &fields);
@@ -342,7 +344,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceSlip(void)
     const PetscInt vStart = verticesStratum.begin();
     const PetscInt vEnd = verticesStratum.end();
 
-    topology::VecVisitorMesh dispIncrVisitor(fields.get("dispIncr(t->t+dt)"));
+    topology::VecVisitorMesh dispIncrVisitor(fields.get("solnIncr(t->t+dt)"));
     const PetscScalar* dispIncrArray = dispIncrVisitor.localArray();CPPUNIT_ASSERT(dispIncrArray);
 
     const PylithScalar* valsE = _data->fieldIncrSlipE;CPPUNIT_ASSERT(valsE);
@@ -405,9 +407,10 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceOpen(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
-  topology::Jacobian jacobian(fields.solution());
+  topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+  topology::Jacobian jacobian(solution);
   _setFieldsJacobian(&mesh, &fault, &fields, &jacobian, _data->fieldIncrOpen);
 
   const int spaceDim = _data->spaceDim;
@@ -417,8 +420,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceOpen(void)
   fault.timeStep(dt);
   fault.constrainSolnSpace(&fields, t, jacobian);
 
-  topology::Field& solution = fields.solution();
-  const topology::Field& dispIncrAdj = fields.get("dispIncr adjust");
+  const topology::Field& dispIncrAdj = fields.get("solnIncr adjust");
   solution += dispIncrAdj;
 
   fault.updateStateVars(t, &fields);
@@ -434,7 +436,7 @@ pylith::faults::TestFaultCohesiveDyn::testConstrainSolnSpaceOpen(void)
     const PetscInt vStart = verticesStratum.begin();
     const PetscInt vEnd = verticesStratum.end();
 
-    topology::VecVisitorMesh dispIncrVisitor(fields.get("dispIncr(t->t+dt)"));
+    topology::VecVisitorMesh dispIncrVisitor(fields.get("solnIncr(t->t+dt)"));
     const PetscScalar* dispIncrArray = dispIncrVisitor.localArray();CPPUNIT_ASSERT(dispIncrArray);
 
     const PylithScalar* valsE = _data->fieldIncrOpenE;CPPUNIT_ASSERT(valsE);
@@ -497,9 +499,9 @@ pylith::faults::TestFaultCohesiveDyn::testUpdateStateVars(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
-  topology::Jacobian jacobian(fields.solution());
+  topology::Jacobian jacobian(fields.get("solnIncr(t->t+dt)"));
   _setFieldsJacobian(&mesh, &fault, &fields, &jacobian, _data->fieldIncrSlip);
 
   const int spaceDim = _data->spaceDim;
@@ -526,9 +528,9 @@ pylith::faults::TestFaultCohesiveDyn::testCalcTractions(void)
 
   topology::Mesh mesh;
   FaultCohesiveDyn fault;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &fault, &fields);
-  topology::Jacobian jacobian(fields.solution());
+  topology::Jacobian jacobian(fields.get("solnIncr(t->t+dt)"));
   _setFieldsJacobian(&mesh, &fault, &fields, &jacobian, _data->fieldIncrStick);
 
   const int spaceDim = _data->spaceDim;
@@ -539,7 +541,7 @@ pylith::faults::TestFaultCohesiveDyn::testCalcTractions(void)
 
   const PylithScalar t = 0;
   fault.updateStateVars(t, &fields);
-  fault._calcTractions(&tractions, fields.get("disp(t)"));
+  fault._calcTractions(&tractions, fields.get("soln(t)"));
 
   PetscDM faultDMMesh = fault._faultMesh->dmMesh();CPPUNIT_ASSERT(faultDMMesh);
   topology::SubMeshIS subpointIS(*fault._faultMesh);
@@ -549,7 +551,7 @@ pylith::faults::TestFaultCohesiveDyn::testCalcTractions(void)
   topology::VecVisitorMesh tractionVisitor(tractions);
   const PetscScalar* tractionArray = tractionVisitor.localArray();CPPUNIT_ASSERT(tractionArray);
 
-  topology::VecVisitorMesh dispVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields.get("soln(t)"));
   const PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
 
   PetscDM dmMesh = mesh.dmMesh();CPPUNIT_ASSERT(dmMesh);
@@ -608,7 +610,7 @@ pylith::faults::TestFaultCohesiveDyn::testCalcTractions(void)
 void
 pylith::faults::TestFaultCohesiveDyn::_initialize(topology::Mesh* const mesh,
 						  FaultCohesiveDyn* const fault,
-						  topology::SolutionFields* const fields)
+						  topology::Fields* const fields)
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -692,18 +694,17 @@ pylith::faults::TestFaultCohesiveDyn::_initialize(topology::Mesh* const mesh,
   fault->initialize(*mesh, upDir);
   
   // Setup fields
-  fields->add("disp(t)", "displacement");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->add("velocity(t)", "velocity");
-  fields->add("dispIncr adjust", "dispIncr_adjust");
-  fields->solutionName("dispIncr(t->t+dt)");
+  fields->add("soln(t)", "solution");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
+  fields->add("solnDeriv1(t)", "solution_deriv1");
+  fields->add("solnIncr adjust", "solutionIncr_adjust");
   
   const int spaceDim = _data->spaceDim;
-  topology::Field& disp = fields->get("disp(t)");
+  topology::Field& disp = fields->get("soln(t)");
   disp.newSection(topology::FieldBase::VERTICES_FIELD, spaceDim);
   disp.allocate();
   disp.scale(_data->lengthScale);
-  fields->copyLayout("disp(t)");
+  fields->copyLayout("soln(t)");
 
   fault->verifyConfiguration(*mesh);
 
@@ -715,7 +716,7 @@ pylith::faults::TestFaultCohesiveDyn::_initialize(topology::Mesh* const mesh,
 void
 pylith::faults::TestFaultCohesiveDyn::_setFieldsJacobian(topology::Mesh* const mesh,
 							 FaultCohesiveDyn* const fault,
-							 topology::SolutionFields* const fields,
+							 topology::Fields* const fields,
 							 topology::Jacobian* const jacobian,
 							 const PylithScalar* const fieldIncr)
 { // _initialize
@@ -738,7 +739,7 @@ pylith::faults::TestFaultCohesiveDyn::_setFieldsJacobian(topology::Mesh* const m
   const PetscInt vEnd = verticesStratum.end();
 
   // Set displacement values
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
   PetscScalar* dispArray = dispVisitor.localArray();CPPUNIT_ASSERT(dispArray);
   for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
     const PetscInt off = dispVisitor.sectionOffset(v);
@@ -749,7 +750,7 @@ pylith::faults::TestFaultCohesiveDyn::_setFieldsJacobian(topology::Mesh* const m
   } // for
 
   // Set increment values
-  topology::VecVisitorMesh dispIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   PetscScalar* dispIncrArray = dispIncrVisitor.localArray();CPPUNIT_ASSERT(dispIncrArray);
   for(PetscInt v = vStart, iVertex = 0; v < vEnd; ++v, ++iVertex) {
     const PetscInt off = dispIncrVisitor.sectionOffset(v);

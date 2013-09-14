@@ -26,7 +26,7 @@
 #include "pylith/topology/Mesh.hh" // USES Mesh
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/topology/CoordsVisitor.hh" // USES CoordsVisitor
@@ -155,7 +155,7 @@ pylith::feassemble::IntegratorElasticity::initialize(const topology::Mesh& mesh)
 // Update state variables as needed.
 void
 pylith::feassemble::IntegratorElasticity::updateStateVars(const PylithScalar t,
-							  topology::SolutionFields* const fields)
+							  topology::Fields* const fields)
 { // updateState
   PYLITH_METHOD_BEGIN;
 
@@ -199,7 +199,7 @@ pylith::feassemble::IntegratorElasticity::updateStateVars(const PylithScalar t,
 
   // Setup visitors.
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   scalar_array coordsCell(numCorners*spaceDim);
   topology::CoordsVisitor coordsVisitor(dmMesh);
@@ -300,7 +300,7 @@ pylith::feassemble::IntegratorElasticity::verifyConfiguration(const topology::Me
 const pylith::topology::Field&
 pylith::feassemble::IntegratorElasticity::cellField(const char* name,
 						    const topology::Mesh& mesh,
-						    topology::SolutionFields* fields)
+						    topology::Fields* fields)
 { // cellField
   PYLITH_METHOD_BEGIN;
 
@@ -486,7 +486,7 @@ pylith::feassemble::IntegratorElasticity::_allocateTensorField(const topology::M
 void
 pylith::feassemble::IntegratorElasticity::_calcStrainStressField(topology::Field* field,
 								 const char* name,
-								 topology::SolutionFields* const fields)
+								 topology::Fields* const fields)
 { // _calcStrainStressField
   PYLITH_METHOD_BEGIN;
   
@@ -532,7 +532,7 @@ pylith::feassemble::IntegratorElasticity::_calcStrainStressField(topology::Field
 
   // Setup field visitors.
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   topology::VecVisitorMesh fieldVisitor(*field);
   PetscScalar* fieldArray = fieldVisitor.localArray();

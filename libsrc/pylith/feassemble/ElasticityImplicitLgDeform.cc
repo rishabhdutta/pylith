@@ -25,7 +25,7 @@
 
 #include "pylith/materials/ElasticMaterial.hh" // USES ElasticMaterial
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
@@ -106,7 +106,7 @@ void
 pylith::feassemble::ElasticityImplicitLgDeform::integrateResidual(
 			  const topology::Field& residual,
 			  const PylithScalar t,
-			  topology::SolutionFields* const fields)
+			  topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -181,10 +181,10 @@ pylith::feassemble::ElasticityImplicitLgDeform::integrateResidual(
 
   // Setup field visitors.
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   scalar_array dispIncrCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispIncrVisitor(fields->get("solnIncr(t->t+dt)"));
 
   topology::VecVisitorMesh residualVisitor(residual);
 
@@ -287,7 +287,7 @@ pylith::feassemble::ElasticityImplicitLgDeform::integrateResidual(
 void
 pylith::feassemble::ElasticityImplicitLgDeform::integrateJacobian(topology::Jacobian* jacobian,
 								  const PylithScalar t,
-								  topology::SolutionFields* fields)
+								  topology::Fields* fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
 
@@ -360,17 +360,17 @@ pylith::feassemble::ElasticityImplicitLgDeform::integrateJacobian(topology::Jaco
 
   // Setup field visitors.
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   scalar_array dispIncrCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispIncrVisitor(fields->get("solnIncr(t->t+dt)"));
 
   scalar_array coordsCell(numBasis*spaceDim); // :KULDGE: Update numBasis to numCorners after implementing higher order
   topology::CoordsVisitor coordsVisitor(dmMesh);
 
   // Get sparse matrix
   const PetscMat jacobianMat = jacobian->matrix();assert(jacobianMat);
-  topology::MatVisitorMesh jacobianVisitor(jacobianMat, fields->get("disp(t)"));
+  topology::MatVisitorMesh jacobianVisitor(jacobianMat, fields->get("soln(t)"));
 
   // Get parameters used in integration.
   const PylithScalar dt = _dt;

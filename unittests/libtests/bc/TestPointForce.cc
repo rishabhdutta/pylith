@@ -28,7 +28,7 @@
 #include "pylith/topology/MeshOps.hh" // USES MeshOps::nondimensionalize()
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/meshio/MeshIOAscii.hh" // USES MeshIOAscii
@@ -184,7 +184,7 @@ pylith::bc::TestPointForce::testIntegrateResidual(void)
   residual.allocate();
   residual.zero();
 
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
 
   const PylithScalar t = _data->tResidual/_data->timeScale;
   bc.integrateResidual(residual, t, &fields);

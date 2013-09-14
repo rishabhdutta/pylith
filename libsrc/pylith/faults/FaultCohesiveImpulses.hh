@@ -108,7 +108,7 @@ public :
    */
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Get vertex field associated with integrator.
    *
@@ -117,7 +117,7 @@ public :
    * @returns Vertex field.
    */
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields* fields =0);
+				     const topology::Fields* fields =0);
 
   // PRIVATE METHODS ////////////////////////////////////////////////////
 private :

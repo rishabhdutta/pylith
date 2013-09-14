@@ -120,7 +120,7 @@ private :
    */
   void _initialize(topology::Mesh* const mesh,
 		   FaultCohesiveKin* const fault,
-		   topology::SolutionFields* const fields) const;
+		   topology::Fields* const fields) const;
 
   /** Determine if vertex is a Lagrange multiplier constraint vertex.
    *

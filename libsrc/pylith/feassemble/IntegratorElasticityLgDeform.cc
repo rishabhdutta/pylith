@@ -26,7 +26,7 @@
 #include "pylith/materials/ElasticMaterial.hh" // USES ElasticMaterial
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/topology/CoordsVisitor.hh" // USES CoordsVisitor
@@ -65,7 +65,7 @@ pylith::feassemble::IntegratorElasticityLgDeform::needNewJacobian(void)
 // Update state variables as needed.
 void
 pylith::feassemble::IntegratorElasticityLgDeform::updateStateVars(const PylithScalar t,
-								  topology::SolutionFields* const fields)
+								  topology::Fields* const fields)
 { // updateStateVars
   PYLITH_METHOD_BEGIN;
 
@@ -111,7 +111,7 @@ pylith::feassemble::IntegratorElasticityLgDeform::updateStateVars(const PylithSc
   const PetscInt numCells = _materialIS->size();
 
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   scalar_array coordsCell(numBasis*spaceDim); // :KULDGE: Update numBasis to numCorners after implementing higher order
   topology::CoordsVisitor coordsVisitor(dmMesh);
@@ -144,7 +144,7 @@ pylith::feassemble::IntegratorElasticityLgDeform::updateStateVars(const PylithSc
 void
 pylith::feassemble::IntegratorElasticityLgDeform::_calcStrainStressField(topology::Field* field,
 									 const char* name,
-									 topology::SolutionFields* const fields)
+									 topology::Fields* const fields)
 { // _calcStrainStressField
   PYLITH_METHOD_BEGIN;
 
@@ -191,7 +191,7 @@ pylith::feassemble::IntegratorElasticityLgDeform::_calcStrainStressField(topolog
 
   // Setup field visitors.
   scalar_array dispCell(numBasis*spaceDim);
-  topology::VecVisitorMesh dispVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispVisitor(fields->get("soln(t)"));
 
   topology::VecVisitorMesh fieldVisitor(*field);
   PetscScalar* fieldArray = fieldVisitor.localArray();

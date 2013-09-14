@@ -69,7 +69,7 @@ namespace pylith {
       virtual
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator that do not require assembly processors.
@@ -81,7 +81,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Jacobian* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator that do not require assembly across processors.
@@ -92,7 +92,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Field* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Adjust solution from solver with lumped Jacobian to match Lagrange
        *  multiplier constraints.
@@ -102,7 +102,7 @@ namespace pylith {
        * @param jacobian Jacobian of the system.
        */
       virtual
-      void adjustSolnLumped(pylith::topology::SolutionFields* fields,
+      void adjustSolnLumped(pylith::topology::Fields* fields,
 			    const PylithScalar t,
 			    const pylith::topology::Field& jacobian);
 

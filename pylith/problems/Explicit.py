@@ -114,19 +114,19 @@ class Explicit(Formulation, ModuleExplicit):
     #memoryLogger.setDebug(0)
     #memoryLogger.stagePush("Problem")
 
-    # Allocate other fields, reusing layout from dispIncr
+    # Allocate other fields, reusing layout from solnIncr
     if 0 == comm.rank:
       self._info.log("Creating other fields.")
-    self.fields.add("disp(t-dt)", "displacement")
-    self.fields.add("velocity(t)", "velocity")
-    self.fields.add("acceleration(t)", "acceleration")
-    self.fields.copyLayout("dispIncr(t->t+dt)")
+    self.fields.add("soln(t-dt)", "solution")
+    self.fields.add("solnDeriv1(t)", "solution_deriv")
+    self.fields.add("solnDeriv2(t)", "solution_deriv2")
+    self.fields.copyLayout("solnIncr(t->t+dt)")
     self._debug.log(resourceUsageString())
 
     # Setup fields and set to zero
-    dispTmdt = self.fields.get("disp(t-dt)")
+    dispTmdt = self.fields.get("soln(t-dt)")
     dispTmdt.zeroAll()
-    dispT = self.fields.get("disp(t)")
+    dispT = self.fields.get("soln(t)")
     dispT.zeroAll()
     residual = self.fields.get("residual")
     residual.zeroAll()
@@ -177,9 +177,9 @@ class Explicit(Formulation, ModuleExplicit):
     logEvent = "%sprestep" % self._loggingPrefix
     self._eventLogger.eventBegin(logEvent)
     
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
     for constraint in self.constraints:
-      constraint.setFieldIncr(t, t+dt, dispIncr)
+      constraint.setFieldIncr(t, t+dt, solnIncr)
 
     needNewJacobian = False
     for integrator in self.integrators:
@@ -206,8 +206,8 @@ class Explicit(Formulation, ModuleExplicit):
       self._info.log("Solving equations.")
 
     residual = self.fields.get("residual")
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
-    self.solver.solve(dispIncr, self.jacobian, residual)
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
+    self.solver.solve(solnIncr, self.jacobian, residual)
 
     return
 
@@ -233,13 +233,13 @@ class Explicit(Formulation, ModuleExplicit):
     self._writeData(t)
 
     # Update displacement field from time t to time t+dt.
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
-    dispT = self.fields.get("disp(t)")
-    dispTmdt = self.fields.get("disp(t-dt)")
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
+    solnT = self.fields.get("soln(t)")
+    solnTmdt = self.fields.get("soln(t-dt)")
 
-    dispTmdt.copy(dispT)
-    dispT.add(dispIncr)
-    dispIncr.zeroAll()
+    solnTmdt.copy(solnT)
+    solnT.add(solnIncr)
+    solnIncr.zeroAll()
 
     # Complete post-step processing.
     Formulation.poststep(self, t, dt)
@@ -257,10 +257,10 @@ class Explicit(Formulation, ModuleExplicit):
     
     if 0 == comm.rank:
       self._info.log("Setting constraints.")
-    disp = self.fields.get("dispIncr(t->t+dt)")
-    disp.zeroAll()
+    soln = self.fields.get("solnIncr(t->t+dt)")
+    soln.zeroAll()
     for constraint in self.constraints:
-      constraint.setField(t+dt, disp)
+      constraint.setField(t+dt, soln)
 
     needNewJacobian = False
     for integrator in self.integrators:

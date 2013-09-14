@@ -93,7 +93,7 @@ namespace pylith {
       virtual
       void integrateResidual(const pylith::topology::Field& residual,
 				      const PylithScalar t,
-				      pylith::topology::SolutionFields* const fields);
+				      pylith::topology::Fields* const fields);
 
       /** Update state variables as needed.
        *
@@ -102,7 +102,7 @@ namespace pylith {
        * @param mesh Finite-element mesh
        */
       void updateStateVars(const PylithScalar t,
-			   pylith::topology::SolutionFields* const fields);
+			   pylith::topology::Fields* const fields);
       
       /** Constrain solution space based on friction.
        *
@@ -110,7 +110,7 @@ namespace pylith {
        * @param t Current time.
        * @param jacobian Sparse matrix for system Jacobian.
        */
-      void constrainSolnSpace(pylith::topology::SolutionFields* const fields,
+      void constrainSolnSpace(pylith::topology::Fields* const fields,
 			      const PylithScalar t,
 			      const pylith::topology::Jacobian& jacobian);
 
@@ -121,7 +121,7 @@ namespace pylith {
        * @param t Current time.
        * @param jacobian Jacobian of the system.
        */
-      void adjustSolnLumped(pylith::topology::SolutionFields* fields,
+      void adjustSolnLumped(pylith::topology::Fields* fields,
 			    const PylithScalar t,
 			    const pylith::topology::Field& jacobian);
 
@@ -138,7 +138,7 @@ namespace pylith {
        * @returns Vertex field.
        */
       const pylith::topology::Field& vertexField(const char* name,
-						 const pylith::topology::SolutionFields* fields =0);
+						 const pylith::topology::Fields* fields =0);
       
       /** Get cell field associated with integrator.
        *
@@ -147,7 +147,7 @@ namespace pylith {
        * @returns Cell field.
        */
       const pylith::topology::Field& cellField(const char* name,
-					       const pylith::topology::SolutionFields* fields =0);
+					       const pylith::topology::Fields* fields =0);
 
     }; // class FaultCohesiveDyn
 

@@ -87,7 +87,7 @@ pylith::bc::Neumann::initialize(const topology::Mesh& mesh,
 void
 pylith::bc::Neumann::integrateResidual(const topology::Field& residual,
 				       const PylithScalar t,
-				       topology::SolutionFields* const fields)
+				       topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -183,7 +183,7 @@ pylith::bc::Neumann::verifyConfiguration(const topology::Mesh& mesh) const
 // Get cell field for tractions.
 const pylith::topology::Field&
 pylith::bc::Neumann::cellField(const char* name,
-			       topology::SolutionFields* const fields)
+			       topology::Fields* const fields)
 { // cellField
   PYLITH_METHOD_BEGIN;
 

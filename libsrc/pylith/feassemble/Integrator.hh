@@ -29,7 +29,7 @@
 // Include directives ---------------------------------------------------
 #include "feassemblefwd.hh" // forward declarations
 
-#include "pylith/topology/topologyfwd.hh" // USES Mesh, Field, SolutionFields
+#include "pylith/topology/topologyfwd.hh" // USES Mesh, Field, Fields
 #include "pylith/utils/utilsfwd.hh" // HOLDSA EventLogger
 #include "pylith/utils/petscfwd.h" // USES PetscMat
 
@@ -144,7 +144,7 @@ public :
   virtual 
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to residual term (r) for operator.
    *
@@ -155,7 +155,7 @@ public :
   virtual
   void integrateResidualLumped(const topology::Field& residual,
        const PylithScalar t,
-       topology::SolutionFields* const fields);
+       topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -167,7 +167,7 @@ public :
   virtual
   void integrateJacobian(topology::Jacobian* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -179,7 +179,7 @@ public :
   virtual
   void integrateJacobian(topology::Field* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -191,7 +191,7 @@ public :
   virtual
   void calcPreconditioner(PetscMat* const precondMatrix,
 			  topology::Jacobian* const jacobian,
-			  topology::SolutionFields* const fields);
+			  topology::Fields* const fields);
 
   /** Update state variables as needed.
    *
@@ -201,7 +201,7 @@ public :
    */
   virtual
   void updateStateVars(const PylithScalar t,
-		       topology::SolutionFields* const fields);
+		       topology::Fields* const fields);
 
   /** Constrain solution space.
    *
@@ -210,7 +210,7 @@ public :
    * @param jacobian Sparse matrix for system Jacobian.
    */
   virtual
-  void constrainSolnSpace(topology::SolutionFields* const fields,
+  void constrainSolnSpace(topology::Fields* const fields,
 			  const PylithScalar t,
 			  const topology::Jacobian& jacobian);
 
@@ -222,7 +222,7 @@ public :
    * @param jacobian Jacobian of the system.
    */
   virtual
-  void adjustSolnLumped(topology::SolutionFields* fields,
+  void adjustSolnLumped(topology::Fields* fields,
 			const PylithScalar t,
 			const topology::Field& jacobian);
 

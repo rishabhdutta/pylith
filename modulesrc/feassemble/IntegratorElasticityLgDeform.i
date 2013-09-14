@@ -51,7 +51,7 @@ namespace pylith {
        * @param mesh Finite-element mesh
        */
       void updateStateVars(const PylithScalar t,
-			   pylith::topology::SolutionFields* const fields);
+			   pylith::topology::Fields* const fields);
       
     }; // IntegratorElasticityLgDeform
 

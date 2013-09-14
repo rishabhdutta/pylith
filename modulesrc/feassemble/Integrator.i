@@ -121,7 +121,7 @@ namespace pylith {
       virtual 
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator.
@@ -133,7 +133,7 @@ namespace pylith {
       virtual
       void integrateJacobian(pylith::topology::Jacobian* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator.
@@ -145,7 +145,7 @@ namespace pylith {
       virtual
       void integrateJacobian(pylith::topology::Field* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Update state variables as needed.
        *
@@ -155,7 +155,7 @@ namespace pylith {
        */
       virtual
       void updateStateVars(const PylithScalar t,
-			   pylith::topology::SolutionFields* const fields);
+			   pylith::topology::Fields* const fields);
 
       /** Verify configuration is acceptable.
        *

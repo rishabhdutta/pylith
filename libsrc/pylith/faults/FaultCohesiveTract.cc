@@ -85,7 +85,7 @@ pylith::faults::FaultCohesiveTract::initialize(const topology::Mesh& mesh,
 void
 pylith::faults::FaultCohesiveTract::integrateResidual(const topology::Field& residual,
 						      const PylithScalar t,
-						      topology::SolutionFields* const fields)
+						      topology::Fields* const fields)
 { // integrateResidual
   throw std::logic_error("FaultCohesiveTract::integrateResidual() not implemented.");
 } // integrateResidual
@@ -95,7 +95,7 @@ pylith::faults::FaultCohesiveTract::integrateResidual(const topology::Field& res
 void
 pylith::faults::FaultCohesiveTract::integrateJacobian(topology::Jacobian* jacobian,
 						      const PylithScalar t,
-						      topology::SolutionFields* const fields)
+						      topology::Fields* const fields)
 { // integrateJacobian
   throw std::logic_error("FaultCohesiveTract::integrateJacobian() not implemented.");
 
@@ -161,7 +161,7 @@ pylith::faults::FaultCohesiveTract::verifyConfiguration(const topology::Mesh& me
 // Get vertex field associated with integrator.
 const pylith::topology::Field&
 pylith::faults::FaultCohesiveTract::vertexField(const char* name,
-						const topology::SolutionFields* fields)
+						const topology::Fields* fields)
 { // vertexField
   throw std::logic_error("FaultCohesiveTract::vertexField() not implemented.");
 } // vertexField
@@ -170,7 +170,7 @@ pylith::faults::FaultCohesiveTract::vertexField(const char* name,
 // Get cell field associated with integrator.
 const pylith::topology::Field&
 pylith::faults::FaultCohesiveTract::cellField(const char* name,
-					      const topology::SolutionFields* fields)
+					      const topology::Fields* fields)
 { // cellField
   throw std::logic_error("FaultCohesiveTract::cellField() not implemented.");
 } // cellField

@@ -29,7 +29,7 @@
 // Include directives ---------------------------------------------------
 #include "problemsfwd.hh" // forward declarations
 
-#include "pylith/topology/topologyfwd.hh" // USES SolutionFields
+#include "pylith/topology/topologyfwd.hh" // USES Fields
 #include "pylith/utils/utilsfwd.hh" // USES EventLogger
 #include "pylith/utils/petscfwd.h" // USES PetscMat
 
@@ -71,7 +71,7 @@ public :
    */
   virtual
   void
-  initialize(const topology::SolutionFields& fields,
+  initialize(const topology::Fields& fields,
 	     const topology::Jacobian& jacobian,
 	     Formulation* const formulation);
 
@@ -83,7 +83,7 @@ protected :
    * @param fields Solution fields.
    */
   void
-  _createNullSpace(const topology::SolutionFields& fields);
+  _createNullSpace(const topology::Fields& fields);
 
   /** Setup preconditioner for preconditioning using split fields.
    *
@@ -96,7 +96,7 @@ protected :
   _setupFieldSplit(PetscPC* const pc,
 		   Formulation* const formulation,
 		   const topology::Jacobian& jacobian,
-		   const topology::SolutionFields& fields);
+		   const topology::Fields& fields);
 
   /** :MATT: :TODO: DOCUMENT THIS.
    */

@@ -127,7 +127,7 @@ private:
    */
   void _initialize(topology::Mesh* const mesh,
       FaultCohesiveDyn* const fault,
-      topology::SolutionFields* const fields);
+      topology::Fields* const fields);
 
   /** Set values for fields and Jacobian.
    *
@@ -143,7 +143,7 @@ private:
    */
   void _setFieldsJacobian(topology::Mesh* const mesh,
       FaultCohesiveDyn* const fault,
-      topology::SolutionFields* const fields,
+      topology::Fields* const fields,
       topology::Jacobian* const jacobian,
       const PylithScalar* const fieldIncrVals);
 

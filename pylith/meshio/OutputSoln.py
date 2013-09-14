@@ -108,9 +108,9 @@ class OutputSoln(OutputManager):
     """
     field = None
     if name == "displacement":
-      field = fields.get("disp(t)")
+      field = fields.get("soln(t)")
     elif name == "velocity":
-      field = fields.get("velocity(t)")
+      field = fields.get("soln_deriv1(t)")
     else:
       raise ValueError, "Vertex field '%s' not available." % name
     return field

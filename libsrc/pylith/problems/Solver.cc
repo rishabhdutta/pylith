@@ -24,7 +24,7 @@
 
 #include "pylith/topology/Mesh.hh" // USES Mesh
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 
 #include "pylith/utils/EventLogger.hh" // USES EventLogger
@@ -107,7 +107,7 @@ pylith::problems::Solver::deallocate(void)
 // ----------------------------------------------------------------------
 // Initialize solver.
 void
-pylith::problems::Solver::initialize(const topology::SolutionFields& fields,
+pylith::problems::Solver::initialize(const topology::Fields& fields,
 				     const topology::Jacobian& jacobian,
 				     Formulation* const formulation)
 { // initialize
@@ -119,8 +119,9 @@ pylith::problems::Solver::initialize(const topology::SolutionFields& fields,
   // Make global preconditioner matrix
   PetscMat jacobianMat = jacobian.matrix();
 
-  PetscSection solutionSection = fields.solution().petscSection();assert(solutionSection);
-  PetscDM dmMesh = fields.solution().mesh().dmMesh();assert(dmMesh);
+  const topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+  PetscSection solutionSection = solution.petscSection();assert(solutionSection);
+  PetscDM dmMesh = fields.get("solnIncr(t->t+dt)").mesh().dmMesh();assert(dmMesh);
   PetscInt numFields;
   PetscErrorCode err;
 
@@ -149,11 +150,11 @@ pylith::problems::Solver::initialize(const topology::SolutionFields& fields,
 // ----------------------------------------------------------------------
 // Create null space.
 void
-pylith::problems::Solver::_createNullSpace(const topology::SolutionFields& fields)
+pylith::problems::Solver::_createNullSpace(const topology::Fields& fields)
 { // _createNullSpace
   PYLITH_METHOD_BEGIN;
 
-  PetscDM dmMesh = fields.solution().dmMesh();assert(dmMesh);
+  PetscDM dmMesh = fields.get("solnIncr(t->t+dt)").dmMesh();assert(dmMesh);
   PetscErrorCode err;
 
   const spatialdata::geocoords::CoordSys* cs = fields.mesh().coordsys();assert(cs);
@@ -162,9 +163,10 @@ pylith::problems::Solver::_createNullSpace(const topology::SolutionFields& field
   MPI_Comm comm;
   err = PetscObjectGetComm((PetscObject) dmMesh, &comm);PYLITH_CHECK_ERROR(err);
 
-  PetscSection solutionSection = fields.solution().petscSection();assert(solutionSection);
-  PetscVec solutionVec = fields.solution().localVector();assert(solutionVec);
-  PetscVec solutionGlobalVec = fields.solution().globalVector();assert(solutionGlobalVec);
+  const topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+  PetscSection solutionSection = solution.petscSection();assert(solutionSection);
+  PetscVec solutionVec = solution.localVector();assert(solutionVec);
+  PetscVec solutionGlobalVec = fields.get("solnIncr(t->t+dt)").globalVector();assert(solutionGlobalVec);
   MatNullSpace nullsp = NULL;    
   PetscSection coordinateSection = NULL;
   PetscVec coordinateVec = NULL;
@@ -250,18 +252,19 @@ void
 pylith::problems::Solver::_setupFieldSplit(PetscPC* const pc,
 					   Formulation* const formulation,
 					   const topology::Jacobian& jacobian,
-					   const topology::SolutionFields& fields)
+					   const topology::Fields& fields)
 { // _setupFieldSplit
   PYLITH_METHOD_BEGIN;
 
   assert(pc);
   assert(formulation);
 
-  PetscDM dmMesh = fields.solution().dmMesh();assert(dmMesh);
+  const topology::Field& solution = fields.get("solnIncr(t->t+dt)");
+  PetscDM dmMesh = solution.dmMesh();assert(dmMesh);
   MPI_Comm comm;
-  PetscSection solutionSection = fields.solution().petscSection();assert(solutionSection);
-  PetscVec solutionVec = fields.solution().localVector();assert(solutionVec);
-  PetscVec solutionGlobalVec = fields.solution().globalVector();assert(solutionGlobalVec);
+  PetscSection solutionSection = solution.petscSection();assert(solutionSection);
+  PetscVec solutionVec = solution.localVector();assert(solutionVec);
+  PetscVec solutionGlobalVec = solution.globalVector();assert(solutionGlobalVec);
   PetscInt numFields;
   PetscErrorCode err;
 

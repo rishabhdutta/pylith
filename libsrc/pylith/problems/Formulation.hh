@@ -30,7 +30,7 @@
 #include "problemsfwd.hh" // forward declarations
 
 #include "pylith/feassemble/feassemblefwd.hh" // USES Integrator
-#include "pylith/topology/topologyfwd.hh" // USES Mesh, Field, SolutionFields
+#include "pylith/topology/topologyfwd.hh" // USES Mesh, Field, Fields
 
 #include "pylith/utils/petscfwd.h" // USES PetscVec, PetscMat
 
@@ -83,7 +83,7 @@ public :
    *
    * @returns solution fields.
    */
-  const topology::SolutionFields& fields(void) const;
+  const topology::Fields& fields(void) const;
 
   /** Get flag indicating whether Jacobian is symmetric.
    *
@@ -114,7 +114,7 @@ public :
    * @param dt Time step (nondimension).
    */
   void updateSettings(topology::Jacobian* jacobian,
-		      topology::SolutionFields* fields,
+		      topology::Fields* fields,
 		      const PylithScalar t,
 		      const PylithScalar dt);
 
@@ -127,7 +127,7 @@ public :
    * @param dt Time step (nondimension).
    */
   void updateSettings(topology::Field* jacobian,
-		      topology::SolutionFields* fields,
+		      topology::Fields* fields,
 		      const PylithScalar t,
 		      const PylithScalar dt);
 
@@ -178,7 +178,7 @@ protected :
   topology::Jacobian* _jacobian; ///< Handle to Jacobian of system.
   PetscMat _customConstraintPCMat; ///< Custom PETSc preconditioning matrix for constraints.
   topology::Field* _jacobianLumped; ///< Handle to lumped Jacobian of system.
-  topology::SolutionFields* _fields; ///< Handle to solution fields for system.
+  topology::Fields* _fields; ///< Handle to solution fields for system.
 
   std::vector<feassemble::Integrator*> _integrators; ///< Array of integrators.
 

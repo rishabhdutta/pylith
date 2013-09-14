@@ -51,11 +51,10 @@ class TestJacobian(unittest.TestCase):
     importer._configure()
     self.mesh = importer.read(debug=False, interpolate=False)
 
-    from pylith.topology.SolutionFields import SolutionFields
-    fields = SolutionFields(self.mesh)
-    fields.add("disp t+dt", "displacement")
-    fields.solutionName("disp t+dt")
-    solution = fields.solution()
+    from pylith.topology.Fields import Fields
+    fields = Fields(self.mesh)
+    fields.add("soln(t)", "solution")
+    solution = fields.get("soln(t)")
     solution.newSection(solution.VERTICES_FIELD, self.mesh.dimension())
     solution.allocate()
     solution.zero()
@@ -75,8 +74,8 @@ class TestJacobian(unittest.TestCase):
     Test constructor.
     """
     # setUp() tests constructor with default type
-    jacobianA = Jacobian(self.fields.solution(), "aij")
-    jacobianB = Jacobian(self.fields.solution(), "baij")
+    jacobianA = Jacobian(self.fields.get("soln(t)"), "aij")
+    jacobianB = Jacobian(self.fields.get("soln(t)"), "baij")
     return
 
 
@@ -141,7 +140,7 @@ class TestJacobian(unittest.TestCase):
     :WARNING: This is not a complete test of write(). We do not
     verify the results.
     """
-    self.jacobian = Jacobian(self.fields.solution(), "aij")
+    self.jacobian = Jacobian(self.fields.get("soln(t)"), "aij")
     self.jacobian.assemble("final_assembly")
 
     self.jacobian.write("jacobian.mat", self.mesh.comm())

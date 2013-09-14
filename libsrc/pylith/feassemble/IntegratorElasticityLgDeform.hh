@@ -70,7 +70,7 @@ public :
    * @param mesh Finite-element mesh
    */
   void updateStateVars(const PylithScalar t,
-		       topology::SolutionFields* const fields);
+		       topology::Fields* const fields);
 
 // PROTECTED METHODS ////////////////////////////////////////////////////
 protected :
@@ -83,7 +83,7 @@ protected :
    */
   void _calcStrainStressField(topology::Field* field,
 			      const char* name,
-			      topology::SolutionFields* const fields);
+			      topology::Fields* const fields);
 
   /** Integrate elasticity term in residual for 1-D cells.
    *

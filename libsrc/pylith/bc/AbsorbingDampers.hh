@@ -100,7 +100,7 @@ public :
    */
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to residual term (r) for operator.
    *
@@ -110,7 +110,7 @@ public :
    */
   void integrateResidualLumped(const topology::Field& residual,
 			       const PylithScalar t,
-			       topology::SolutionFields* const fields);
+			       topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -121,7 +121,7 @@ public :
    */
   void integrateJacobian(topology::Jacobian* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Integrate contributions to Jacobian matrix (A) associated with
    * operator.
@@ -132,7 +132,7 @@ public :
    */
   void integrateJacobian(topology::Field* jacobian,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Verify configuration is acceptable.
    *

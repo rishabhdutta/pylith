@@ -25,7 +25,7 @@
 
 #include "pylith/feassemble/Integrator.hh" // USES Integrator
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 
 #include "pylith/utils/error.h" // USES PYLITH_CHECK_ERROR
 #include <cassert> // USES assert()
@@ -109,7 +109,7 @@ pylith::problems::Formulation::useCustomConstraintPC(void) const
 
 // ----------------------------------------------------------------------
 // Return the fields
-const pylith::topology::SolutionFields&
+const pylith::topology::Fields&
 pylith::problems::Formulation::fields(void) const
 { // fields
   return *this->_fields;
@@ -154,7 +154,7 @@ pylith::problems::Formulation::customPCMatrix(PetscMat& mat)
 // residual.
 void
 pylith::problems::Formulation::updateSettings(topology::Jacobian* jacobian,
-					      topology::SolutionFields* fields,
+					      topology::Fields* fields,
 					      const PylithScalar t,
 					      const PylithScalar dt)
 { // updateSettings
@@ -173,7 +173,7 @@ pylith::problems::Formulation::updateSettings(topology::Jacobian* jacobian,
 // residual.
 void
 pylith::problems::Formulation::updateSettings(topology::Field* jacobian,
-					      topology::SolutionFields* fields,
+					      topology::Fields* fields,
 					      const PylithScalar t,
 					      const PylithScalar dt)
 { // updateSettings
@@ -199,7 +199,7 @@ pylith::problems::Formulation::reformResidual(const PetscVec* tmpResidualVec,
 
   // Update section view of field.
   if (tmpSolutionVec) {
-    topology::Field& solution = _fields->solution();
+    topology::Field& solution = _fields->get("solnIncr(t->t+dt)");
     solution.scatterGlobalToLocal(*tmpSolutionVec);
   } // if
 
@@ -246,7 +246,7 @@ pylith::problems::Formulation::reformJacobian(const PetscVec* tmpSolutionVec)
 
   // Update section view of field.
   if (tmpSolutionVec) {
-    topology::Field& solution = _fields->solution();
+    topology::Field& solution = _fields->get("solnIncr(t->t+dt)");
     solution.scatterGlobalToLocal(*tmpSolutionVec);
   } // if
 
@@ -315,7 +315,7 @@ pylith::problems::Formulation::constrainSolnSpace(const PetscVec* tmpSolutionVec
   assert(tmpSolutionVec);
   assert(_fields);
 
-  topology::Field& solution = _fields->solution();
+  topology::Field& solution = _fields->get("solnIncr(t->t+dt)");
 
   if (!_fields->hasField("dispIncr adjust")) {
     _fields->add("dispIncr adjust", "dispIncr_adjust");
@@ -356,7 +356,7 @@ pylith::problems::Formulation::adjustSolnLumped(void)
 { // adjustSolnLumped
   PYLITH_METHOD_BEGIN;
 
-  topology::Field& solution = _fields->solution();
+  topology::Field& solution = _fields->get("solnIncr(t->t+dt)");
 
   if (!_fields->hasField("dispIncr adjust")) {
     _fields->add("dispIncr adjust", "dispIncr_adjust");
@@ -397,7 +397,7 @@ pylith::problems::Formulation::printState(PetscVec* solutionVec,
   const int numTimeSteps = 1;
   writer.open(mesh, numTimeSteps);
    
-  topology::Field& solution = _fields->solution();
+  topology::Field& solution = _fields->get("solnIncr(t->t+dt)");
   solution.scatterGlobalToLocal(*solutionVec);
   writer.writeVertexField(0.0, solution, mesh);
   solution.view("DIVERGED_SOLUTION");

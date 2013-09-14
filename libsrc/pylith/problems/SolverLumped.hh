@@ -57,7 +57,7 @@ public :
    * @param formulation Formulation of system of equations.
    */
   void
-  initialize(const topology::SolutionFields& fields,
+  initialize(const topology::Fields& fields,
 	     const topology::Field& jacobian,
 	     Formulation* const formulation);
 

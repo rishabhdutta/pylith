@@ -30,7 +30,6 @@ swig_sources = \
 	FieldBase.i \
 	Field.i \
 	Fields.i \
-	SolutionFields.i \
 	Jacobian.i \
 	Distributor.i \
 	RefineUniform.i \

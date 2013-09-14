@@ -22,7 +22,7 @@
 
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "spatialdata/geocoords/CoordSys.hh" // USES CoordSys
 #include "spatialdata/units/Nondimensional.hh" // USES Nondimensional
@@ -86,7 +86,7 @@ pylith::bc::PointForce::initialize(const topology::Mesh& mesh,
 void
 pylith::bc::PointForce::integrateResidual(const topology::Field& residual,
 					  const PylithScalar t,
-					  topology::SolutionFields* const fields)
+					  topology::Fields* const fields)
 { // integrateResidualAssembled
   PYLITH_METHOD_BEGIN;
 

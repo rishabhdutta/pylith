@@ -24,7 +24,7 @@
 
 #include "pylith/topology/Mesh.hh" // USES Mesh
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 
 #include "pylith/meshio/MeshIOAscii.hh" // USES MeshIOAscii
 

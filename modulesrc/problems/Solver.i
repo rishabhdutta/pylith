@@ -50,7 +50,7 @@ namespace pylith {
        */
       virtual
       void
-      initialize(const pylith::topology::SolutionFields& fields,
+      initialize(const pylith::topology::Fields& fields,
 		 const pylith::topology::Jacobian& jacobian,
 		 Formulation* const formulation);
 

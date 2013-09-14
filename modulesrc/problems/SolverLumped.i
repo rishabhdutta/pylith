@@ -47,7 +47,7 @@ namespace pylith {
        * @param formulation Formulation of system of equations.
        */
       void
-      initialize(const pylith::topology::SolutionFields& fields,
+      initialize(const pylith::topology::Fields& fields,
 		 const pylith::topology::Field& jacobian,
 		 Formulation* const formulation);
       

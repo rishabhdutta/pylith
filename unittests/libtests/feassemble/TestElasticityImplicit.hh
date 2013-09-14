@@ -30,7 +30,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "pylith/feassemble/feassemblefwd.hh" // forward declarations
-#include "pylith/topology/topologyfwd.hh" // USES Mesh, SolutionFields
+#include "pylith/topology/topologyfwd.hh" // USES Mesh, Fields
 #include "pylith/materials/materialsfwd.hh" // USES ElasticMaterial
 
 #include "spatialdata/spatialdb/spatialdbfwd.hh" // USES GravityField
@@ -116,7 +116,7 @@ private :
    */
   void _initialize(topology::Mesh* mesh,
 		   ElasticityImplicit* const integrator,
-		   topology::SolutionFields* const fields);
+		   topology::Fields* const fields);
 
 }; // class TestElasticityImplicit
 

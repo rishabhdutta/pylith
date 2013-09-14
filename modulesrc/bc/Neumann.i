@@ -57,7 +57,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator.
@@ -68,7 +68,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Jacobian* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Verify configuration is acceptable.
        *
@@ -86,7 +86,7 @@ namespace pylith {
        * @returns Traction vector at integration points.
        */
       const pylith::topology::Field& cellField(const char* name,
-					       pylith::topology::SolutionFields* const fields =0);
+					       pylith::topology::Fields* const fields =0);
 
       // PROTECTED METHODS //////////////////////////////////////////////
     protected :

@@ -306,15 +306,14 @@ class TestElasticityExplicitLgDeform(unittest.TestCase):
     integrator.timeStep(dt)
 
     # Setup fields
-    from pylith.topology.SolutionFields import SolutionFields
-    fields = SolutionFields(mesh)
+    from pylith.topology.Fields import Fields
+    fields = Fields(mesh)
     fields.add("residual", "residual")
-    fields.add("disp(t+dt)", "displacement")
-    fields.add("disp(t)", "displacement")
-    fields.add("disp(t-dt)", "displacement")
-    fields.add("velocity(t)", "velocity")
-    fields.add("acceleration(t)", "acceleration")
-    fields.solutionName("disp(t+dt)")
+    fields.add("soln(t+dt)", "solution_increment")
+    fields.add("soln(t)", "solution")
+    fields.add("soln(t-dt)", "solution_previous")
+    fields.add("solnDeriv1(t)", "soln_deriv1")
+    fields.add("solnDeriv2(t)", "soln_deriv2")
 
     residual = fields.get("residual")
     residual.newSection(residual.VERTICES_FIELD, mesh.coordsys().spaceDim())

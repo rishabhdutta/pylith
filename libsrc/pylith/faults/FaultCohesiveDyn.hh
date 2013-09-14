@@ -107,7 +107,7 @@ public :
   virtual
   void integrateResidual(const topology::Field& residual,
 			 const PylithScalar t,
-			 topology::SolutionFields* const fields);
+			 topology::Fields* const fields);
 
   /** Update state variables as needed.
    *
@@ -116,7 +116,7 @@ public :
    * @param mesh Finite-element mesh
    */
   void updateStateVars(const PylithScalar t,
-		       topology::SolutionFields* const fields);
+		       topology::Fields* const fields);
 
   /** Constrain solution space based on friction.
    *
@@ -124,7 +124,7 @@ public :
    * @param t Current time.
    * @param jacobian Sparse matrix for system Jacobian.
    */
-  void constrainSolnSpace(topology::SolutionFields* const fields,
+  void constrainSolnSpace(topology::Fields* const fields,
 			  const PylithScalar t,
 			  const topology::Jacobian& jacobian);
 
@@ -135,7 +135,7 @@ public :
    * @param t Current time.
    * @param jacobian Jacobian of the system.
    */
-  void adjustSolnLumped(topology::SolutionFields* fields,
+  void adjustSolnLumped(topology::Fields* fields,
 			const PylithScalar t,
 			const topology::Field& jacobian);
 
@@ -146,7 +146,7 @@ public :
    * @returns Vertex field.
    */
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields* fields =0);
+				     const topology::Fields* fields =0);
 
   // PRIVATE METHODS ////////////////////////////////////////////////////
 private :
@@ -165,7 +165,7 @@ private :
    *
    * @param fields Solution fields.
    */
-  void _updateRelMotion(const topology::SolutionFields& fields);
+  void _updateRelMotion(const topology::Fields& fields);
 
   /** Setup sensitivity problem to compute change in slip given change
    * in Lagrange multipliers.
@@ -184,7 +184,7 @@ private :
    */
   void _sensitivityUpdateJacobian(const bool negativeSide,
                                   const topology::Jacobian& jacobian,
-                                  const topology::SolutionFields& fields);
+                                  const topology::Fields& fields);
 
   /** Reform residual for sensitivity problem.
    *
@@ -220,7 +220,7 @@ private :
    */
   PylithScalar _constrainSolnSpaceNorm(const PylithScalar alpha,
 				       const PylithScalar t,
-				       topology::SolutionFields* const fields);
+				       topology::Fields* const fields);
 
   /** Constrain solution space in 1-D.
    *

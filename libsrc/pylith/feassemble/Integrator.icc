@@ -58,7 +58,7 @@ inline
 void
 pylith::feassemble::Integrator::integrateResidual(const topology::Field& residual,
 						  const PylithScalar t,
-						  topology::SolutionFields* const fields) {
+						  topology::Fields* const fields) {
 } // integrateResidual
 
 // Integrate contributions to residual term (r) for operator.
@@ -66,7 +66,7 @@ inline
 void
 pylith::feassemble::Integrator::integrateResidualLumped(const topology::Field& residual,
 							const PylithScalar t,
-							topology::SolutionFields* const fields) {
+							topology::Fields* const fields) {
   integrateResidual(residual, t, fields);
 } // integrateResidual
 
@@ -76,7 +76,7 @@ inline
 void
 pylith::feassemble::Integrator::integrateJacobian(topology::Jacobian* jacobian,
 						  const PylithScalar t,
-						  topology::SolutionFields* const fields) {
+						  topology::Fields* const fields) {
   _needNewJacobian = false;
 } // integrateJacobian
 
@@ -86,7 +86,7 @@ inline
 void
 pylith::feassemble::Integrator::integrateJacobian(topology::Field* jacobian,
 						  const PylithScalar t,
-						  topology::SolutionFields* const fields) {
+						  topology::Fields* const fields) {
   _needNewJacobian = false;
 } // integrateJacobian
 
@@ -96,20 +96,20 @@ inline
 void 
 pylith::feassemble::Integrator::calcPreconditioner(PetscMat* const precondMatrix,
 						   topology::Jacobian* const jacobian,
-						   topology::SolutionFields* const fields) {
+						   topology::Fields* const fields) {
 } // calcPreconditioner
 
 // Update state variables as needed.
 inline
 void
 pylith::feassemble::Integrator::updateStateVars(const PylithScalar t,
-						topology::SolutionFields* const fields) {
+						topology::Fields* const fields) {
 } // updateState
 
 // Constrain solution space.
 inline
 void
-pylith::feassemble::Integrator::constrainSolnSpace(topology::SolutionFields* const fields,
+pylith::feassemble::Integrator::constrainSolnSpace(topology::Fields* const fields,
 						   const PylithScalar t,
 						   const topology::Jacobian& jacobian) {
 } // constrainSolnSpace
@@ -118,7 +118,7 @@ pylith::feassemble::Integrator::constrainSolnSpace(topology::SolutionFields* con
 //  multiplier constraints.
 inline
 void
-pylith::feassemble::Integrator::adjustSolnLumped(topology::SolutionFields* fields,
+pylith::feassemble::Integrator::adjustSolnLumped(topology::Fields* fields,
 						 const PylithScalar t,
 						 const topology::Field& jacobian) {
 } // adjustSolnLumped

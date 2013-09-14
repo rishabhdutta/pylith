@@ -22,7 +22,7 @@
 
 #include "pylith/topology/Fields.hh" // HOLDSA Fields
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/CoordsVisitor.hh" // USES CoordsVisitor
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
@@ -227,7 +227,7 @@ pylith::bc::AbsorbingDampers::initialize(const topology::Mesh& mesh,
 void
 pylith::bc::AbsorbingDampers::integrateResidual(const topology::Field& residual,
 						const PylithScalar t,
-						topology::SolutionFields* const fields)
+						topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -269,7 +269,7 @@ pylith::bc::AbsorbingDampers::integrateResidual(const topology::Field& residual,
     _residualVisitor = new topology::VecVisitorSubMesh(residual, *_submeshIS);assert(_residualVisitor);
   } // if
   if (!_velocityVisitor) {
-    _velocityVisitor = new topology::VecVisitorSubMesh(fields->get("velocity(t)"), *_submeshIS);assert(_velocityVisitor);
+    _velocityVisitor = new topology::VecVisitorSubMesh(fields->get("solnDeriv1(t)"), *_submeshIS);assert(_velocityVisitor);
   } // if
   scalar_array velocityCell(numBasis*spaceDim);
   
@@ -359,7 +359,7 @@ pylith::bc::AbsorbingDampers::integrateResidual(const topology::Field& residual,
 void
 pylith::bc::AbsorbingDampers::integrateResidualLumped(const topology::Field& residual,
 						      const PylithScalar t,
-						      topology::SolutionFields* const fields)
+						      topology::Fields* const fields)
 { // integrateResidualLumped
   PYLITH_METHOD_BEGIN;
 
@@ -405,7 +405,7 @@ pylith::bc::AbsorbingDampers::integrateResidualLumped(const topology::Field& res
     _residualVisitor = new topology::VecVisitorSubMesh(residual, *_submeshIS);assert(_residualVisitor);
   } // if
   if (!_velocityVisitor) {
-    _velocityVisitor = new topology::VecVisitorSubMesh(fields->get("velocity(t)"), *_submeshIS);assert(_velocityVisitor);
+    _velocityVisitor = new topology::VecVisitorSubMesh(fields->get("solnDeriv1(t)"), *_submeshIS);assert(_velocityVisitor);
   } // if
   scalar_array velocityCell(numBasis*spaceDim);
 
@@ -491,7 +491,7 @@ pylith::bc::AbsorbingDampers::integrateResidualLumped(const topology::Field& res
 void
 pylith::bc::AbsorbingDampers::integrateJacobian(topology::Jacobian* jacobian,
 						const PylithScalar t,
-						topology::SolutionFields* const fields)
+						topology::Fields* const fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
 
@@ -528,7 +528,7 @@ pylith::bc::AbsorbingDampers::integrateJacobian(topology::Jacobian* jacobian,
   PetscScalar* dampingConstsArray = dampingConstsVisitor.localArray();
 
   // Get sparse matrix
-  const topology::Field& solution = fields->solution();
+  const topology::Field& solution = fields->get("solnIncr(t->t+dt)");
   const PetscMat jacobianMat = jacobian->matrix();assert(jacobianMat);
   if (!_jacobianMatVisitor) {
     assert(_submeshIS);
@@ -624,7 +624,7 @@ pylith::bc::AbsorbingDampers::integrateJacobian(topology::Jacobian* jacobian,
 void
 pylith::bc::AbsorbingDampers::integrateJacobian(topology::Field* jacobian,
 						const PylithScalar t,
-						topology::SolutionFields* const fields)
+						topology::Fields* const fields)
 { // integrateJacobian
   PYLITH_METHOD_BEGIN;
 

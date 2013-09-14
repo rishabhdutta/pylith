@@ -131,25 +131,25 @@ class Implicit(Formulation, ModuleImplicit):
     #memoryLogger.setDebug(0)
     #memoryLogger.stagePush("Problem")
 
-    # Allocate other fields, reusing layout from dispIncr
+    # Allocate other fields, reusing layout from solnIncr
     if 0 == comm.rank:
       self._info.log("Creating other fields.")
-    self.fields.add("velocity(t)", "velocity")
-    self.fields.copyLayout("dispIncr(t->t+dt)")
+    self.fields.add("solnDeriv(t)", "solution_deriv1")
+    self.fields.copyLayout("solnIncr(t->t+dt)")
 
     # Setup fields and set to zero
-    dispT = self.fields.get("disp(t)")
-    dispT.zeroAll()
+    solnT = self.fields.get("soln(t)")
+    solnT.zeroAll()
     residual = self.fields.get("residual")
     residual.zeroAll()
     residual.createScatter(residual.mesh())
 
     lengthScale = normalizer.lengthScale()
     timeScale = normalizer.timeScale()
-    velocityScale = lengthScale / timeScale
-    velocityT = self.fields.get("velocity(t)")
-    velocityT.scale(velocityScale.value)
-    velocityT.zeroAll()
+    #velocityScale = lengthScale / timeScale
+    solnDeriv = self.fields.get("solnDeriv1(t)")
+    #solnDeriv.scale(velocityScale.value)
+    solnDeriv.zeroAll()
 
     self._debug.log(resourceUsageString())
     #memoryLogger.stagePop()
@@ -184,10 +184,10 @@ class Implicit(Formulation, ModuleImplicit):
     
     if 0 == comm.rank:
       self._info.log("Setting constraints.")
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
-    dispIncr.zeroAll()
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
+    solnIncr.zeroAll()
     for constraint in self.constraints:
-      constraint.setFieldIncr(t, t+dt, dispIncr)
+      constraint.setFieldIncr(t, t+dt, solnIncr)
 
     needNewJacobian = False
     for integrator in self.integrators:
@@ -207,7 +207,7 @@ class Implicit(Formulation, ModuleImplicit):
     from pylith.mpi.Communicator import mpi_comm_world
     comm = mpi_comm_world()
 
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
 
     self._reformResidual(t+dt, dt)
 
@@ -217,8 +217,8 @@ class Implicit(Formulation, ModuleImplicit):
 
     residual = self.fields.get("residual")
     #self.jacobian.view() # TEMPORARY
-    self.solver.solve(dispIncr, self.jacobian, residual)
-    #dispIncr.view("DISP INCR") # TEMPORARY
+    self.solver.solve(solnIncr, self.jacobian, residual)
+    #solnIncr.view("DISP INCR") # TEMPORARY
 
     # DEBUGGING Verify solution makes residual 0
     #self._reformResidual(t+dt, dt)
@@ -236,11 +236,11 @@ class Implicit(Formulation, ModuleImplicit):
     from pylith.mpi.Communicator import mpi_comm_world
     comm = mpi_comm_world()
 
-    # Update displacement field from time t to time t+dt.
-    dispIncr = self.fields.get("dispIncr(t->t+dt)")
-    disp = self.fields.get("disp(t)")
-    disp.add(dispIncr)
-    dispIncr.zeroAll()
+    # Update solution field from time t to time t+dt.
+    solnIncr = self.fields.get("solnIncr(t->t+dt)")
+    soln = self.fields.get("soln(t)")
+    soln.add(solnIncr)
+    solnIncr.zeroAll()
 
     # Complete post-step processing, then write data.
     Formulation.poststep(self, t, dt)
@@ -265,10 +265,10 @@ class Implicit(Formulation, ModuleImplicit):
     
     if 0 == comm.rank:
       self._info.log("Setting constraints.")
-    disp = self.fields.get("dispIncr(t->t+dt)")
-    disp.zeroAll()
+    soln = self.fields.get("solnIncr(t->t+dt)")
+    soln.zeroAll()
     for constraint in self.constraints:
-      constraint.setField(t+dt, disp)
+      constraint.setField(t+dt, soln)
 
     needNewJacobian = False
     for integrator in self.integrators:

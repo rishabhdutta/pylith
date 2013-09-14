@@ -70,7 +70,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Integrate contributions to Jacobian matrix (A) associated with
        * operator.
@@ -81,7 +81,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Jacobian* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
   
     }; // ElasticityImplicit
 

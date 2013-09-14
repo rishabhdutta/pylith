@@ -101,7 +101,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Get vertex field associated with integrator.
        *
@@ -110,7 +110,7 @@ namespace pylith {
        * @returns Vertex field.
        */
       const pylith::topology::Field& vertexField(const char* name,
-						 const pylith::topology::SolutionFields* fields =0);
+						 const pylith::topology::Fields* fields =0);
       
       /** Get cell field associated with integrator.
        *
@@ -119,7 +119,7 @@ namespace pylith {
        * @returns Cell field.
        */
       const pylith::topology::Field& cellField(const char* name,
-					       const pylith::topology::SolutionFields* fields =0);
+					       const pylith::topology::Fields* fields =0);
 
     }; // class FaultCohesiveImpulses
 

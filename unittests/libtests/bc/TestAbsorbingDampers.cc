@@ -28,7 +28,7 @@
 #include "pylith/topology/MeshOps.hh" // USES MeshOps::nondimensionalize()
 #include "pylith/feassemble/Quadrature.hh" // USES Quadrature
 #include "pylith/topology/Fields.hh" // USES Fields
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 #include "pylith/topology/Stratum.hh" // USES Stratum
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
@@ -107,7 +107,7 @@ pylith::bc::TestAbsorbingDampers::testInitialize(void)
 
   topology::Mesh mesh;
   AbsorbingDampers bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   CPPUNIT_ASSERT(_data);
@@ -199,7 +199,7 @@ pylith::bc::TestAbsorbingDampers::testIntegrateResidual(void)
 
   topology::Mesh mesh;
   AbsorbingDampers bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   const topology::Mesh& boundaryMesh = *bc._boundaryMesh;
@@ -256,13 +256,13 @@ pylith::bc::TestAbsorbingDampers::testIntegrateJacobian(void)
 
   topology::Mesh mesh;
   AbsorbingDampers bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   const topology::Mesh& boundaryMesh = *bc._boundaryMesh;
   PetscDM subMesh = boundaryMesh.dmMesh();CPPUNIT_ASSERT(subMesh);
 
-  topology::Field& solution = fields.solution();
+  topology::Field& solution = fields.get("solnIncr(t->t+dt)");
   topology::Jacobian jacobian(solution);
 
   const PylithScalar t = 1.0;
@@ -334,7 +334,7 @@ pylith::bc::TestAbsorbingDampers::testIntegrateJacobianLumped(void)
 
   topology::Mesh mesh;
   AbsorbingDampers bc;
-  topology::SolutionFields fields(mesh);
+  topology::Fields fields(mesh);
   _initialize(&mesh, &bc, &fields);
 
   topology::Field jacobian(mesh);
@@ -405,7 +405,7 @@ pylith::bc::TestAbsorbingDampers::testIntegrateJacobianLumped(void)
 void
 pylith::bc::TestAbsorbingDampers::_initialize(topology::Mesh* mesh,
 					      AbsorbingDampers* const bc,
-					      topology::SolutionFields* fields) const
+					      topology::Fields* fields) const
 { // _initialize
   PYLITH_METHOD_BEGIN;
 
@@ -463,11 +463,10 @@ pylith::bc::TestAbsorbingDampers::_initialize(topology::Mesh* mesh,
   // Setup fields
   CPPUNIT_ASSERT(fields);
   fields->add("residual", "residual");
-  fields->add("dispIncr(t->t+dt)", "displacement_increment");
-  fields->add("disp(t)", "displacement");
-  fields->add("disp(t-dt)", "displacement");
-  fields->add("velocity(t)", "velocity");
-  fields->solutionName("dispIncr(t->t+dt)");
+  fields->add("solnIncr(t->t+dt)", "solution_increment");
+  fields->add("soln(t)", "solution");
+  fields->add("soln(t-dt)", "solution_previous");
+  fields->add("solnDeriv1(t)", "solution_deriv1");
 
   topology::Field& residual = fields->get("residual");
   PetscDM dmMesh = mesh->dmMesh();CPPUNIT_ASSERT(dmMesh);
@@ -485,16 +484,16 @@ pylith::bc::TestAbsorbingDampers::_initialize(topology::Mesh* mesh,
   const int totalNumVertices = vEnd - vStart;
   const int fieldSize = _data->spaceDim * totalNumVertices;
 
-  topology::VecVisitorMesh dispTIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::VecVisitorMesh dispTmdtVisitor(fields->get("disp(t-dt)"));
+  topology::VecVisitorMesh dispTmdtVisitor(fields->get("soln(t-dt)"));
   PetscScalar* dispTmdtArray = dispTmdtVisitor.localArray();
 
-  topology::VecVisitorMesh velocityVisitor(fields->get("velocity(t)"));
+  topology::VecVisitorMesh velocityVisitor(fields->get("solnDeriv1(t)"));
   PetscScalar* velocityArray = velocityVisitor.localArray();
 
   const int spaceDim = _data->spaceDim;

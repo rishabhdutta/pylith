@@ -45,12 +45,11 @@ class TestOutputSolnSubset(unittest.TestCase):
     iohandler._configure()
     mesh = iohandler.read(debug=False, interpolate=False)
 
-    from pylith.topology.SolutionFields import SolutionFields
-    fields = SolutionFields(mesh)
+    from pylith.topology.Fields import Fields
+    fields = Fields(mesh)
 
     name = "disp(t)"
     fields.add(name, "displacement")
-    fields.solutionName(name)
     field = fields.get(name)
     field.newSection(field.VERTICES_FIELD, mesh.dimension())
     field.allocate()

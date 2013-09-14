@@ -97,7 +97,7 @@ public :
    * @returns Traction vector field.
    */
   const topology::Field& vertexField(const char* name,
-				     const topology::SolutionFields* const fields =0);
+				     const topology::Fields* const fields =0);
   
   // PROTECTED METHODS //////////////////////////////////////////////////
 protected :

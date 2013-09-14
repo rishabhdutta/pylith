@@ -24,7 +24,7 @@
 
 #include "pylith/topology/Mesh.hh" // USES Mesh
 #include "pylith/topology/Field.hh" // USES Field
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
 
 #include "pylith/utils/constdefs.h" // USES PYLITH_MAXSCALAR
@@ -80,7 +80,7 @@ pylith::problems::SolverNonlinear::deallocate(void)
 // ----------------------------------------------------------------------
 // Initialize solver.
 void
-pylith::problems::SolverNonlinear::initialize(const topology::SolutionFields& fields,
+pylith::problems::SolverNonlinear::initialize(const topology::Fields& fields,
 					      const topology::Jacobian& jacobian,
 					      Formulation* formulation)
 { // initialize

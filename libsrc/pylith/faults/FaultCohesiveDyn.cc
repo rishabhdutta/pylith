@@ -27,7 +27,7 @@
 #include "pylith/topology/Field.hh" // USES Field
 #include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/Jacobian.hh" // USES Jacobian
-#include "pylith/topology/SolutionFields.hh" // USES SolutionFields
+#include "pylith/topology/Fields.hh" // USES Fields
 #include "pylith/topology/CoordsVisitor.hh" // USES CoordsVisitor
 #include "pylith/topology/VisitorMesh.hh" // USES VecVisitorMesh
 #include "pylith/topology/Stratum.hh" // USES Stratum, StratumIS
@@ -178,7 +178,7 @@ pylith::faults::FaultCohesiveDyn::initialize(const topology::Mesh& mesh,
 void
 pylith::faults::FaultCohesiveDyn::integrateResidual(const topology::Field& residual,
 						    const PylithScalar t,
-						    topology::SolutionFields* const fields)
+						    topology::Fields* const fields)
 { // integrateResidual
   PYLITH_METHOD_BEGIN;
 
@@ -214,11 +214,11 @@ pylith::faults::FaultCohesiveDyn::integrateResidual(const topology::Field& resid
   topology::VecVisitorMesh residualVisitor(residual);
   PetscScalar* residualArray = residualVisitor.localArray();
 
-  topology::Field& dispT = fields->get("disp(t)");
+  topology::Field& dispT = fields->get("soln(t)");
   topology::VecVisitorMesh dispTVisitor(dispT);
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::Field& dispTIncr = fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispTIncr = fields->get("solnIncr(t->t+dt)");
   topology::VecVisitorMesh dispTIncrVisitor(dispTIncr);
   const PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
@@ -285,7 +285,7 @@ pylith::faults::FaultCohesiveDyn::integrateResidual(const topology::Field& resid
     const PetscInt aoff = areaVisitor.sectionOffset(v_fault);
     assert(1 == areaVisitor.sectionDof(v_fault));
 
-    // Get disp(t) at conventional vertices and Lagrange vertex.
+    // Get soln(t) at conventional vertices and Lagrange vertex.
     const PetscInt dtnoff = dispTVisitor.sectionOffset(v_negative);
     assert(spaceDim == dispTVisitor.sectionDof(v_negative));
 
@@ -295,7 +295,7 @@ pylith::faults::FaultCohesiveDyn::integrateResidual(const topology::Field& resid
     const PetscInt dtloff = dispTVisitor.sectionOffset(v_lagrange);
     assert(spaceDim == dispTVisitor.sectionDof(v_lagrange));
 
-    // Get dispIncr(t->t+dt) at conventional vertices and Lagrange vertex.
+    // Get solnIncr(t->t+dt) at conventional vertices and Lagrange vertex.
     const PetscInt dinoff = dispTIncrVisitor.sectionOffset(v_negative);
     assert(spaceDim == dispTIncrVisitor.sectionDof(v_negative));
 
@@ -367,7 +367,7 @@ pylith::faults::FaultCohesiveDyn::integrateResidual(const topology::Field& resid
 // Update state variables as needed.
 void
 pylith::faults::FaultCohesiveDyn::updateStateVars(const PylithScalar t,
-						  topology::SolutionFields* const fields)
+						  topology::Fields* const fields)
 { // updateStateVars
   PYLITH_METHOD_BEGIN;
 
@@ -382,11 +382,11 @@ pylith::faults::FaultCohesiveDyn::updateStateVars(const PylithScalar t,
   scalar_array tractionTpdtVertex(spaceDim); // Fault coordinate system
 
   // Get fields.
-  topology::Field& dispT = fields->get("disp(t)");
+  topology::Field& dispT = fields->get("soln(t)");
   topology::VecVisitorMesh dispTVisitor(dispT);
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::Field& dispTIncr = fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispTIncr = fields->get("solnIncr(t->t+dt)");
   topology::VecVisitorMesh dispTIncrVisitor(dispTIncr);
   const PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
@@ -423,7 +423,7 @@ pylith::faults::FaultCohesiveDyn::updateStateVars(const PylithScalar t,
     const PetscInt ooff = orientationVisitor.sectionOffset(v_fault);
     assert(spaceDim*spaceDim == orientationVisitor.sectionDof(v_fault));
 
-    // Get Lagrange multiplier values from disp(t), and dispIncr(t->t+dt)
+    // Get Lagrange multiplier values from soln(t), and solnIncr(t->t+dt)
     const PetscInt dtloff = dispTVisitor.sectionOffset(v_lagrange);
     assert(spaceDim == dispTVisitor.sectionDof(v_lagrange));
 
@@ -485,7 +485,7 @@ pylith::faults::FaultCohesiveDyn::updateStateVars(const PylithScalar t,
 // ----------------------------------------------------------------------
 // Constrain solution based on friction.
 void
-pylith::faults::FaultCohesiveDyn::constrainSolnSpace(topology::SolutionFields* const fields,
+pylith::faults::FaultCohesiveDyn::constrainSolnSpace(topology::Fields* const fields,
 						     const PylithScalar t,
 						     const topology::Jacobian& jacobian)
 { // constrainSolnSpace
@@ -528,19 +528,19 @@ pylith::faults::FaultCohesiveDyn::constrainSolnSpace(topology::SolutionFields* c
   topology::VecVisitorMesh orientationVisitor(_fields->get("orientation"));
   const PetscScalar* orientationArray = orientationVisitor.localArray();
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
   scalar_array dDispTIncrVertexN(spaceDim);
   scalar_array dDispTIncrVertexP(spaceDim);
-  topology::VecVisitorMesh dispTIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   const PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
-  PetscDM solnDM = fields->get("dispIncr(t->t+dt)").dmMesh();
+  PetscDM solnDM = fields->get("solnIncr(t->t+dt)").dmMesh();
   PetscSection dispTIncrGlobalSection = NULL;
   PetscErrorCode err = DMGetDefaultGlobalSection(solnDM, &dispTIncrGlobalSection);PYLITH_CHECK_ERROR(err);
 
-  topology::VecVisitorMesh dispTIncrAdjVisitor(fields->get("dispIncr adjust"));
+  topology::VecVisitorMesh dispTIncrAdjVisitor(fields->get("solnIncr adjust"));
   PetscScalar* dispTIncrAdjArray = dispTIncrAdjVisitor.localArray();
 
   scalar_array dTractionTpdtVertex(spaceDim);
@@ -833,7 +833,7 @@ pylith::faults::FaultCohesiveDyn::constrainSolnSpace(topology::SolutionFields* c
   topology::VecVisitorMesh sensDispRelVisitor(_fields->get("sensitivity relative disp"));
   PetscScalar* sensDispRelArray = sensDispRelVisitor.localArray();
 
-  dispTIncrAdjVisitor.initialize(fields->get("dispIncr adjust"));
+  dispTIncrAdjVisitor.initialize(fields->get("solnIncr adjust"));
   dispTIncrAdjArray = dispTIncrAdjVisitor.localArray();
 
   dLagrangeVisitor.initialize(_fields->get("sensitivity dLagrange"));
@@ -1009,7 +1009,7 @@ pylith::faults::FaultCohesiveDyn::constrainSolnSpace(topology::SolutionFields* c
 // Adjust solution from solver with lumped Jacobian to match Lagrange
 // multiplier constraints.
 void
-pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::SolutionFields* const fields,
+pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::Fields* const fields,
 						   const PylithScalar t,
 						   const topology::Field& jacobian)
 { // adjustSolnLumped
@@ -1076,16 +1076,16 @@ pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::SolutionFields* con
   topology::VecVisitorMesh orientationVisitor(_fields->get("orientation"));
   const PetscScalar* orientationArray = orientationVisitor.localArray();
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
   scalar_array dispIncrVertexN(spaceDim);
   scalar_array dispIncrVertexP(spaceDim);
   scalar_array lagrangeTIncrVertex(spaceDim);
-  topology::VecVisitorMesh dispTIncrVisitor(fields->get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields->get("solnIncr(t->t+dt)"));
   PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
-  topology::VecVisitorMesh dispTIncrAdjVisitor(fields->get("dispIncr adjust"));
+  topology::VecVisitorMesh dispTIncrAdjVisitor(fields->get("solnIncr adjust"));
   PetscScalar* dispTIncrAdjArray = dispTIncrAdjVisitor.localArray();
 
   topology::VecVisitorMesh jacobianVisitor(jacobian);
@@ -1094,7 +1094,7 @@ pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::SolutionFields* con
   topology::VecVisitorMesh residualVisitor(fields->get("residual"));
   const PetscScalar* residualArray = residualVisitor.localArray();
 
-  PetscDM solnDM = fields->get("dispIncr(t->t+dt)").dmMesh();assert(solnDM);
+  PetscDM solnDM = fields->get("solnIncr(t->t+dt)").dmMesh();assert(solnDM);
   PetscSection solnGlobalSection = NULL;
   PetscErrorCode err = DMGetDefaultGlobalSection(solnDM, &solnGlobalSection);PYLITH_CHECK_ERROR(err);
 
@@ -1145,7 +1145,7 @@ pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::SolutionFields* con
     const PetscInt jpoff = jacobianVisitor.sectionOffset(v_positive);
     assert(spaceDim == jacobianVisitor.sectionDof(v_positive));
 
-    // Get disp(t) at Lagrange vertex.
+    // Get soln(t) at Lagrange vertex.
     const PetscInt dtloff = dispTVisitor.sectionOffset(v_lagrange);
     assert(spaceDim == dispTVisitor.sectionDof(v_lagrange));
 
@@ -1328,7 +1328,7 @@ pylith::faults::FaultCohesiveDyn::adjustSolnLumped(topology::SolutionFields* con
 // Get vertex field associated with integrator.
 const pylith::topology::Field&
 pylith::faults::FaultCohesiveDyn::vertexField(const char* name,
-					      const topology::SolutionFields* fields)
+					      const topology::Fields* fields)
 { // vertexField
   PYLITH_METHOD_BEGIN;
 
@@ -1395,7 +1395,7 @@ pylith::faults::FaultCohesiveDyn::vertexField(const char* name,
 
   } else if (0 == strcasecmp("traction", name)) {
     assert(fields);
-    const topology::Field& dispT = fields->get("disp(t)");
+    const topology::Field& dispT = fields->get("soln(t)");
     _allocateBufferVectorField();
     topology::Field& buffer = _fields->get("buffer (vector)");
     _calcTractions(&buffer, dispT);
@@ -1506,7 +1506,7 @@ pylith::faults::FaultCohesiveDyn::_calcTractions(topology::Field* tractions,
 // associated with Lagrange vertex k corresponding to diffential
 // velocity between conventional vertices i and j.
 void
-pylith::faults::FaultCohesiveDyn::_updateRelMotion(const topology::SolutionFields& fields)
+pylith::faults::FaultCohesiveDyn::_updateRelMotion(const topology::Fields& fields)
 { // _updateRelMotion
   PYLITH_METHOD_BEGIN;
 
@@ -1515,13 +1515,13 @@ pylith::faults::FaultCohesiveDyn::_updateRelMotion(const topology::SolutionField
   const int spaceDim = _quadrature->spaceDim();
 
   // Get section information
-  topology::VecVisitorMesh dispTVisitor(fields.get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields.get("soln(t)"));
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::VecVisitorMesh dispTIncrVisitor(fields.get("dispIncr(t->t+dt)"));
+  topology::VecVisitorMesh dispTIncrVisitor(fields.get("solnIncr(t->t+dt)"));
   const PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 
-  topology::VecVisitorMesh velocityVisitor(fields.get("velocity(t)"));
+  topology::VecVisitorMesh velocityVisitor(fields.get("solnDeriv1(t)"));
   const PetscScalar* velocityArray = velocityVisitor.localArray();
 
   topology::VecVisitorMesh dispRelVisitor(_fields->get("relative disp"));
@@ -1660,7 +1660,7 @@ pylith::faults::FaultCohesiveDyn::_sensitivitySetup(const topology::Jacobian& ja
 void
 pylith::faults::FaultCohesiveDyn::_sensitivityUpdateJacobian(const bool negativeSide,
                                                              const topology::Jacobian& jacobian,
-                                                             const topology::SolutionFields& fields)
+                                                             const topology::Fields& fields)
 { // _sensitivityUpdateJacobian
   PYLITH_METHOD_BEGIN;
 
@@ -1675,7 +1675,7 @@ pylith::faults::FaultCohesiveDyn::_sensitivityUpdateJacobian(const bool negative
   PetscErrorCode err = 0;
 
   // Get solution field
-  const topology::Field& solutionDomain = fields.solution();
+  const topology::Field& solutionDomain = fields.get("solnIncr(t->t+dt)");
   PetscDM solutionDomainDM = solutionDomain.dmMesh();assert(solutionDomainDM);
   PetscSection solutionDomainSection = solutionDomain.petscSection();assert(solutionDomainSection);
   PetscVec solutionDomainVec = solutionDomain.localVector();assert(solutionDomainVec);
@@ -1985,7 +1985,7 @@ pylith::faults::FaultCohesiveDyn::_sensitivityUpdateSoln(const bool negativeSide
 PylithScalar
 pylith::faults::FaultCohesiveDyn::_constrainSolnSpaceNorm(const PylithScalar alpha,
 							  const PylithScalar t,
-							  topology::SolutionFields* const fields)
+							  topology::Fields* const fields)
 { // _constrainSolnSpaceNorm
   PYLITH_METHOD_BEGIN;
 
@@ -2042,10 +2042,10 @@ pylith::faults::FaultCohesiveDyn::_constrainSolnSpaceNorm(const PylithScalar alp
   topology::VecVisitorMesh sensDispRelVisitor(_fields->get("sensitivity relative disp"));
   const PetscScalar* sensDispRelArray = sensDispRelVisitor.localArray();
 
-  topology::VecVisitorMesh dispTVisitor(fields->get("disp(t)"));
+  topology::VecVisitorMesh dispTVisitor(fields->get("soln(t)"));
   const PetscScalar* dispTArray = dispTVisitor.localArray();
 
-  topology::Field& dispTIncr = fields->get("dispIncr(t->t+dt)");
+  topology::Field& dispTIncr = fields->get("solnIncr(t->t+dt)");
   topology::VecVisitorMesh dispTIncrVisitor(dispTIncr);
   const PetscScalar* dispTIncrArray = dispTIncrVisitor.localArray();
 

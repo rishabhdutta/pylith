@@ -391,7 +391,7 @@ pylith::faults::TractPerturbation::hasParameter(const char* name) const
 // Get vertex field with traction perturbation information.
 const pylith::topology::Field&
 pylith::faults::TractPerturbation::vertexField(const char* name,
-					       const topology::SolutionFields* const fields)
+					       const topology::Fields* const fields)
 { // vertexField
   PYLITH_METHOD_BEGIN;
 

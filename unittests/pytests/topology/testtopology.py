@@ -78,9 +78,6 @@ class TestApp(Script):
     from TestMeshFields import TestMeshFields
     suite.addTest(unittest.makeSuite(TestMeshFields))
 
-    from TestSolutionFields import TestSolutionFields
-    suite.addTest(unittest.makeSuite(TestSolutionFields))
-
     from TestJacobian import TestJacobian
     suite.addTest(unittest.makeSuite(TestJacobian))
 

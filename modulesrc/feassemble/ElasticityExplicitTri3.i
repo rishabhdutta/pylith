@@ -68,7 +68,7 @@ namespace pylith {
        */
       void integrateResidual(const pylith::topology::Field& residual,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
       
       /** Integrate contributions to Jacobian matrix (A) associated
        * with operator that require assembly across cells, vertices,
@@ -80,7 +80,7 @@ namespace pylith {
        */
       void integrateJacobian(pylith::topology::Field* jacobian,
 			     const PylithScalar t,
-			     pylith::topology::SolutionFields* const fields);
+			     pylith::topology::Fields* const fields);
 
       /** Verify configuration is acceptable.
        *
@@ -94,7 +94,7 @@ namespace pylith {
       /// Not implemented.
       void integrateJacobian(topology::Jacobian*,
 			     const PylithScalar,
-			     topology::SolutionFields* const);
+			     topology::Fields* const);
 
 
     }; // ElasticityExplicitTri3
