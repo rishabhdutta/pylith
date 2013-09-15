@@ -40,6 +40,9 @@ pylith::feassemble::QuadratureRefCell::QuadratureRefCell(void) :
   _spaceDim(0),
   _geometry(0)
 { // constructor
+  _petscQuadrature.numPoints = NULL;
+  _petscQuadrature.points = NULL;
+  _petscQuadrature.weights = NULL;
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -55,6 +58,8 @@ void
 pylith::feassemble::QuadratureRefCell::deallocate(void)
 { // deallocate
   delete _geometry; _geometry = 0;
+  
+  PetscErrorCode err = PetscQuadratureDestroy(&_petscQuadrature);PYLITH_CHECK_ERROR(err);
 } // deallocate
   
 // ----------------------------------------------------------------------
@@ -73,6 +78,10 @@ pylith::feassemble::QuadratureRefCell::QuadratureRefCell(const QuadratureRefCell
 { // copy constructor
   if (q._geometry)
     _geometry = q._geometry->clone();
+
+  _petscQuadrature.numPoints = NULL;
+  _petscQuadrature.points = NULL;
+  _petscQuadrature.weights = NULL;  
 } // copy constructor
 
 // ----------------------------------------------------------------------
@@ -196,6 +205,21 @@ pylith::feassemble::QuadratureRefCell::initialize(const PylithScalar* basis,
     _spaceDim = spaceDim;
 
   } // else
+
+  // Setup PETSc quadrature
+  PetscErrorCode err;
+  switch (_scheme) {
+  case GAUSS_JACOBI: 
+    err = PetscDTGaussJacobiQuadrature(_spaceDim, _order, -1.0, 1.0, &_petscQuadrature);PYLITH_CHECK_ERROR(err);
+    break;
+  case COLLOCATED:
+    std::cerr << "Collocation quadrature scheme not yet implemented." << std::endl;
+    assert(false);
+    throw std::logic_error("Collocation quadrature scheme not yet implemented.");
+  default :
+    assert(false);
+    throw std::logic_error("Unknown quadrature scheme.");
+  } // switch
 
   PYLITH_METHOD_END;
 } // initialize

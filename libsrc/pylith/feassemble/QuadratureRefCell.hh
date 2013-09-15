@@ -246,6 +246,8 @@ protected :
   SchemeEnum _scheme; ///< Quadrature scheme.
   PylithInt _order; ///< Quadrature order.
   PylithScalar _minJacobian; ///< Minium allowable Jacobian determinant
+
+  PetscQuadrature _petscQuadrature; ///< PETSc object for points and weights.
   
   /** Array of coordinates of quadrature points in reference cell.
    *
