@@ -19,6 +19,7 @@
 #include <portinfo>
 
 #include "Field.hh" // implementation of class methods
+#include "FieldOps.hh" // USES createFiniteElement()
 
 #include "Mesh.hh" // USES Mesh
 
@@ -141,7 +142,6 @@ pylith::topology::Field::deallocate(void)
 
   clear();
   PetscErrorCode err = DMDestroy(&_dm);PYLITH_CHECK_ERROR(err);
-
   PYLITH_METHOD_END;
 } // deallocate
 
@@ -539,6 +539,10 @@ pylith::topology::Field::clear(void)
   err = VecDestroy(&_globalVec);PYLITH_CHECK_ERROR(err);
   err = VecDestroy(&_localVec);PYLITH_CHECK_ERROR(err);
 
+  for(std::vector<PetscFE>::const_iterator f_iter = _fe.begin(); f_iter != _fe.end(); ++f_iter) {
+    err = PetscFEDestroy(const_cast<PetscFE*>(&(*f_iter)));PYLITH_CHECK_ERROR(err);
+  }
+  _fe.clear();
   _tmpFields.clear();
   _metadata["default"].scale = 1.0;
   _metadata["default"].vectorFieldType = OTHER;
@@ -1274,16 +1278,36 @@ pylith::topology::Field::_getScatter(const char* context) const
 // Experimental
 void
 pylith::topology::Field::addField(const char *name,
-				  int numComponents)
+                                  int numComponents,
+                                  int order)
 { // addField
   PYLITH_METHOD_BEGIN;
 
   // Keep track of name/components until setup
-  _tmpFields[name] = numComponents;
-  _metadata[name]  = _metadata["default"];
+  _tmpFields.push_back(physical_field_type(name,numComponents,order));
+  _metadata[name] = _metadata["default"];
+  _metadata[name].num = _tmpFields.size()-1;
 
   PYLITH_METHOD_END;
 } // addField
+
+void
+pylith::topology::Field::getField(const char *name,
+                                  PetscFE& fe)
+{ // getField
+  PYLITH_METHOD_BEGIN;
+  fe = _fe[_metadata[name].num];
+  PYLITH_METHOD_END;
+} // getField
+
+void
+pylith::topology::Field::getField(int num,
+                                  PetscFE& fe)
+{ // getField
+  PYLITH_METHOD_BEGIN;
+  fe = _fe[num];
+  PYLITH_METHOD_END;
+} // getField
 
 // ----------------------------------------------------------------------
 void
@@ -1293,63 +1317,50 @@ pylith::topology::Field::setupFields(void)
 
   assert(_dm);
   // Keep track of name/components until setup
-  PetscSection section;
-  PetscInt f = 0;
-  PetscErrorCode err = DMGetDefaultSection(_dm, &section);PYLITH_CHECK_ERROR(err);assert(section);
-  err = PetscSectionSetNumFields(section, _tmpFields.size());PYLITH_CHECK_ERROR(err);
-  for(std::map<std::string, int>::const_iterator f_iter = _tmpFields.begin(); f_iter != _tmpFields.end(); ++f_iter, ++f) {
-    err = PetscSectionSetFieldName(section, f, f_iter->first.c_str());PYLITH_CHECK_ERROR(err);
-    err = PetscSectionSetFieldComponents(section, f, f_iter->second);PYLITH_CHECK_ERROR(err);
-  } // for
-  _tmpFields.clear();
-
-  PYLITH_METHOD_END;
-} // setupFields
-
-// ----------------------------------------------------------------------
-void
-pylith::topology::Field::updateDof(const char *name,
-				   const DomainEnum domain,
-				   int fiberDim)
-{ // updateDof
-  PYLITH_METHOD_BEGIN;
-
-  PetscInt pStart, pEnd, f = 0;
+  PetscSection   section;
+  PetscInt       dim, f = 0, pStart = -1, pEnd = -1;
   PetscErrorCode err;
 
-  assert(_dm);
-  switch(domain) {
-  case VERTICES_FIELD:
-    err = DMPlexGetDepthStratum(_dm, 0, &pStart, &pEnd);PYLITH_CHECK_ERROR(err);
-    break;
-  case CELLS_FIELD:
-    err = DMPlexGetHeightStratum(_dm, 0, &pStart, &pEnd);PYLITH_CHECK_ERROR(err);
-    break;
-  case FACES_FIELD:
-    err = DMPlexGetHeightStratum(_dm, 1, &pStart, &pEnd);PYLITH_CHECK_ERROR(err);
-    break;
-  case POINTS_FIELD:
-    err = DMPlexGetChart(_dm, &pStart, &pEnd);PYLITH_CHECK_ERROR(err);
-    break;
-  default:
-    std::ostringstream msg;
-    msg << "Unknown value for DomainEnum: " << domain << "  in Field" << std::endl;
-    throw std::logic_error(msg.str());
-  }
-  PetscSection section = NULL;
+  err = DMPlexGetDimension(_dm, &dim);PYLITH_CHECK_ERROR(err);
   err = DMGetDefaultSection(_dm, &section);PYLITH_CHECK_ERROR(err);assert(section);
-  for(map_type::const_iterator f_iter = _metadata.begin(); f_iter != _metadata.end(); ++f_iter) {
-    if (f_iter->first == name) break;
-    if (f_iter->first == "default") continue;
-    ++f;
-  } // for
-  assert(f < _metadata.size());
-  for(PetscInt p = pStart; p < pEnd; ++p) {
-    //err = PetscSectionAddDof(section, p, fiberDim);PYLITH_CHECK_ERROR(err); // Future use
-    err = PetscSectionSetFieldDof(section, p, f, fiberDim);PYLITH_CHECK_ERROR(err);
-  } // for
+  err = PetscSectionSetNumFields(section, _tmpFields.size());PYLITH_CHECK_ERROR(err);
+  for(std::vector<physical_field_type>::const_iterator f_iter = _tmpFields.begin(); f_iter != _tmpFields.end(); ++f_iter, ++f) {
+    PetscFE         fe;
+    const PetscInt *numDof;
+    PetscInt        dStart, dEnd;
 
+    err = PetscSectionSetFieldName(section, f, f_iter->name.c_str());PYLITH_CHECK_ERROR(err);
+    err = PetscSectionSetFieldComponents(section, f, f_iter->numComponents);PYLITH_CHECK_ERROR(err);
+    pylith::topology::FieldOps::createFiniteElement(f_iter->name, dim, f_iter->numComponents, f_iter->order, &fe);
+    _fe.push_back(fe);
+    err = PetscFEGetNumDof(fe, &numDof);PYLITH_CHECK_ERROR(err);
+    for (PetscInt d = 0; d <= dim; ++d) {
+      if (numDof[d]) {
+        err = DMPlexGetDepthStratum(_dm, d, &dStart, &dEnd);PYLITH_CHECK_ERROR(err);
+        pStart = pStart < 0 ? dStart : PetscMin(pStart, dStart);
+        pEnd   = pEnd   < 0 ? dEnd   : PetscMax(pEnd,   dEnd);
+      }
+    }
+  } // for
+  _tmpFields.clear();
+  err = PetscSectionSetChart(section, pStart, pEnd);PYLITH_CHECK_ERROR(err);
+  f   = 0;
+  for(std::vector<PetscFE>::const_iterator f_iter = _fe.begin(); f_iter != _fe.end(); ++f_iter, ++f) {
+    const PetscInt *numDof;
+    PetscInt        dStart, dEnd;
+
+    err = PetscFEGetNumDof(*f_iter, &numDof);PYLITH_CHECK_ERROR(err);
+    for (PetscInt d = 0; d <= dim; ++d) {
+      if (numDof[d]) {
+        err = DMPlexGetDepthStratum(_dm, d, &dStart, &dEnd);PYLITH_CHECK_ERROR(err);
+        for (PetscInt p = dStart; p < dEnd; ++p) {
+          err = PetscSectionAddDof(section, p, numDof[d]);PYLITH_CHECK_ERROR(err);
+          err = PetscSectionSetFieldDof(section, p, f, numDof[d]);PYLITH_CHECK_ERROR(err);
+        }
+      }
+    }
+  } // for
   PYLITH_METHOD_END;
-} // updateDof
+} // setupFields
 
 // End of file 

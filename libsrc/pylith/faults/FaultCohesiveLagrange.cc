@@ -1295,21 +1295,20 @@ pylith::faults::FaultCohesiveLagrange::_calcOrientation(const PylithScalar upDir
   const PetscInt cStart = cellsStratum.begin();
   const PetscInt cEnd = cellsStratum.end();
 
+  const PetscInt order = 1;
+
   // Containers for orientation information.
   // Allocate orientation field.
   scalar_array orientationVertex(orientationSize);
   _fields->add("orientation", "orientation");
   topology::Field& orientation = _fields->get("orientation");
   const topology::Field& dispRel = _fields->get("relative disp");
-  if (spaceDim > 1) orientation.addField("strike_dir", spaceDim);
-  if (spaceDim > 2) orientation.addField("dip_dir", spaceDim);
-  orientation.addField("normal_dir", spaceDim);
+  if (spaceDim > 1) orientation.addField("strike_dir", spaceDim, order);
+  if (spaceDim > 2) orientation.addField("dip_dir", spaceDim, order);
+  orientation.addField("normal_dir", spaceDim, order);
   orientation.setupFields();
   orientation.newSection(dispRel, orientationSize);
   // Create components for along-strike, up-dip, and normal directions
-  if (spaceDim > 1) orientation.updateDof("strike_dir", pylith::topology::FieldBase::VERTICES_FIELD, spaceDim);
-  if (spaceDim > 2) orientation.updateDof("dip_dir", pylith::topology::FieldBase::VERTICES_FIELD, spaceDim);
-  orientation.updateDof("normal_dir", pylith::topology::FieldBase::VERTICES_FIELD, spaceDim);
   orientation.allocate();
   orientation.zeroAll();
 

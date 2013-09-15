@@ -68,6 +68,7 @@ public :
     PylithScalar scale; // Dimension scale associated with values.
     bool dimsOkay; // Ok to replace nondimensionalized values 
                    // with dimensionalized values.
+    PetscInt num; // Field number used in PetscSection
   }; // Metadata
 
 // PUBLIC MEMBERS ///////////////////////////////////////////////////////

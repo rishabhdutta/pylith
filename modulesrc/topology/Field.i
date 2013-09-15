@@ -143,11 +143,9 @@ namespace pylith {
        */
       void cloneSection(const Field& src);
 
-      void addField(const char *name, int numComponents);
+      void addField(const char *name, int numComponents, int order);
 
       void setupFields();
-
-      void updateDof(const char *name, const pylith::topology::FieldBase::DomainEnum domain, const int fiberDim);
 
       /// Clear variables associated with section.
       void clear(void);

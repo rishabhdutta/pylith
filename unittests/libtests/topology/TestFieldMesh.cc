@@ -1324,6 +1324,8 @@ pylith::topology::TestFieldMesh::testSplitDefault(void)
   const PetscInt vStart = depthStratum.begin();
   const PetscInt vEnd = depthStratum.end();
 
+  const PetscInt order = 1;
+
   PetscErrorCode err = 0;
 
   // Create field with section to use to create new field
@@ -1332,15 +1334,9 @@ pylith::topology::TestFieldMesh::testSplitDefault(void)
     for(PetscInt f = 0; f < numFields; ++f) {
       std::ostringstream msg;
       msg << "Field "<<f;
-      fieldSrc.addField(msg.str().c_str(), 1);
+      fieldSrc.addField(msg.str().c_str(), spaceDim, order);
     } // for
     fieldSrc.setupFields();
-    fieldSrc.newSection(Field::VERTICES_FIELD, spaceDim);
-    for(PetscInt f = 0; f < spaceDim; ++f) {
-      std::ostringstream msg;
-      msg << "Field "<<f;
-      fieldSrc.updateDof(msg.str().c_str(), Field::VERTICES_FIELD, 1);
-    } // for
     PetscSection section = fieldSrc.petscSection();CPPUNIT_ASSERT(section);
     PetscInt iV = 0, iC = 0;
     for(PetscInt v = vStart; v < vEnd; ++v) {
@@ -1382,7 +1378,7 @@ pylith::topology::TestFieldMesh::testSplitDefault(void)
 
       err = PetscSectionGetFieldDof(section, v, f, &fdof);PYLITH_CHECK_ERROR(err);
       err = PetscSectionGetFieldConstraintDof(section, v, f, &fcdof);PYLITH_CHECK_ERROR(err);
-      CPPUNIT_ASSERT_EQUAL(1, fdof);
+      CPPUNIT_ASSERT_EQUAL(spaceDim, fdof);
       for(PetscInt iConstraint = 0; iConstraint < nconstraintsVertex; ++iConstraint)
         if (constraints[iC++] == f) isConstrained = PETSC_TRUE;
       const PetscInt constraintDimE = (!isConstrained) ? 0 : 1;
@@ -1418,6 +1414,8 @@ pylith::topology::TestFieldMesh::testCloneSectionSplit(void)
   const PetscInt vStart = depthStratum.begin();
   const PetscInt vEnd = depthStratum.end();
 
+  const PetscInt order = 1;
+
   PetscErrorCode err = 0;
 
   // Create field with atlas to use to create new field
@@ -1426,15 +1424,9 @@ pylith::topology::TestFieldMesh::testCloneSectionSplit(void)
     for(PetscInt f = 0; f < numFields; ++f) {
       std::ostringstream msg;
       msg << "Field "<<f;
-      fieldSrc.addField(msg.str().c_str(), 1);
+      fieldSrc.addField(msg.str().c_str(), spaceDim, order);
     } // for
     fieldSrc.setupFields();
-    fieldSrc.newSection(Field::VERTICES_FIELD, spaceDim);
-    for(PetscInt f = 0; f < spaceDim; ++f) {
-      std::ostringstream msg;
-      msg << "Field "<<f;
-      fieldSrc.updateDof(msg.str().c_str(), Field::VERTICES_FIELD, 1);
-    } // for
     PetscSection section = fieldSrc.petscSection();
     CPPUNIT_ASSERT(section);
     PetscInt iV = 0, iC = 0;
@@ -1480,7 +1472,7 @@ pylith::topology::TestFieldMesh::testCloneSectionSplit(void)
 
       err = PetscSectionGetFieldDof(section, v, f, &fdof);PYLITH_CHECK_ERROR(err);
       err = PetscSectionGetFieldConstraintDof(section, v, f, &fcdof);PYLITH_CHECK_ERROR(err);
-      CPPUNIT_ASSERT_EQUAL(1, fdof);
+      CPPUNIT_ASSERT_EQUAL(spaceDim, fdof);
       for(PetscInt iConstraint = 0; iConstraint < nconstraintsVertex; ++iConstraint)
         if (constraints[iC++] == f) isConstrained = PETSC_TRUE;
       const PetscInt constraintDimE = (!isConstrained) ? 0 : 1;

@@ -689,13 +689,12 @@ pylith::faults::TestFaultCohesiveKin::testSplitField(void)
   const topology::Field& disp = fields.get("soln(t)");
   const spatialdata::geocoords::CoordSys* cs = mesh.coordsys();CPPUNIT_ASSERT(cs);
   const int spaceDim = cs->spaceDim();
+  const int order    = 1;
 
   topology::Field splitField(mesh);
-  splitField.addField("displacement", spaceDim);
-  splitField.addField("fault constraints", spaceDim);
+  splitField.addField("displacement", spaceDim, order);
+  splitField.addField("fault constraints", spaceDim, order);
   splitField.setupFields();
-  splitField.newSection(disp, spaceDim);
-  splitField.updateDof("displacement", topology::FieldBase::VERTICES_FIELD, spaceDim);
   fault.splitField(&splitField);
   splitField.allocate();
   splitField.zero();

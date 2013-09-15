@@ -76,11 +76,10 @@ pylith::bc::TestDirichletBCMulti::testSetConstraintSizes(void)
   _initialize(&mesh, &bcA, &bcB, &bcC);
 
   const int fiberDim = _data->numDOF;
+  const int order    = 1;
   topology::Field field(mesh);
-  field.addField("bc", fiberDim);
+  field.addField("bc", fiberDim, order);
   field.setupFields();
-  field.newSection(pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
-  field.updateDof("bc", pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
   bcA.setConstraintSizes(field);
   bcB.setConstraintSizes(field);
   bcC.setConstraintSizes(field);
@@ -127,11 +126,10 @@ pylith::bc::TestDirichletBCMulti::testSetConstraints(void)
   _initialize(&mesh, &bcA, &bcB, &bcC);
 
   const int fiberDim = _data->numDOF;
+  const int order    = 1;
   topology::Field field(mesh);
-  field.addField("bc", fiberDim);
+  field.addField("bc", fiberDim, order);
   field.setupFields();
-  field.newSection(pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
-  field.updateDof("bc", pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
   bcA.setConstraintSizes(field);
   bcB.setConstraintSizes(field);
   bcC.setConstraintSizes(field);
@@ -191,11 +189,10 @@ pylith::bc::TestDirichletBCMulti::testSetField(void)
   _initialize(&mesh, &bcA, &bcB, &bcC);
 
   const int fiberDim = _data->numDOF;
+  const int order    = 1;
   topology::Field field(mesh);
-  field.addField("bc", fiberDim);
+  field.addField("bc", fiberDim, order);
   field.setupFields();
-  field.newSection(pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
-  field.updateDof("bc", pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
   bcA.setConstraintSizes(field);
   bcB.setConstraintSizes(field);
   bcC.setConstraintSizes(field);
@@ -271,11 +268,10 @@ pylith::bc::TestDirichletBCMulti::testSetFieldIncr(void)
   _initialize(&mesh, &bcA, &bcB, &bcC);
 
   const int fiberDim = _data->numDOF;
+  const int order    = 1;
   topology::Field field(mesh);
-  field.addField("bc", fiberDim);
+  field.addField("bc", fiberDim, order);
   field.setupFields();
-  field.newSection(pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
-  field.updateDof("bc", pylith::topology::FieldBase::VERTICES_FIELD, fiberDim);
   bcA.setConstraintSizes(field);
   bcB.setConstraintSizes(field);
   bcC.setConstraintSizes(field);

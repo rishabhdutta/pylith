@@ -276,20 +276,33 @@ public :
    */
   void cloneSection(const Field& src);
 
-  /** :MATT: ADD DOCUMENTATION
+  /** Add a physical field
+   *
+   * @param name The subfield name
+   * @param numComponents The number of subfield components
+   * @param order The order of the subfield discretization
    */
   void addField(const char *name,
-		int numComponents);
+                int numComponents,
+                int order);
 
-  /** :MATT: ADD DOCUMENTATION
+  /** Return the PetscFE object for a given subfield
+   *
+   * @param name The subfield name
+   * @param fe The PetscFE associated with this subfield
+   */
+  void getField(const char *name, PetscFE& fe);
+
+  /** Return the PetscFE object for a given subfield
+   *
+   * @param num The subfield number used in PetscSection
+   * @param fe The PetscFE associated with this subfield
+   */
+  void getField(int num, PetscFE& fe);
+
+  /** After all addField() calls are made, create the full data layout
    */
   void setupFields(void);
-
-  /** :MATT: ADD DOCUMENTATION
-   */
-  void updateDof(const char *name,
-		 const DomainEnum domain,
-		 const int fiberDim);
 
   /// Clear variables associated with section.
   void clear(void);
@@ -482,6 +495,14 @@ protected :
 
   typedef std::map< std::string, Metadata > map_type;
 
+  struct physical_field_type {
+    std::string name;
+    int numComponents;
+    int order;
+
+    physical_field_type(std::string name, int numComponents, int order) : name(name), numComponents(numComponents), order(order) {};
+  };
+
 // PRIVATE MEMBERS //////////////////////////////////////////////////////
 private :
 
@@ -494,7 +515,8 @@ private :
   PetscDM _dm; ///< Manages the PetscSection
   PetscVec _globalVec; ///< Global PETSc vector
   PetscVec _localVec; ///< Local PETSc vector
-  std::map<std::string, int> _tmpFields; ///< Map of fields to bundle together.
+  std::vector<physical_field_type> _tmpFields; ///< Map of fields to bundle together.
+  std::vector<PetscFE> _fe; ///< PetscFE objects for each subfield
 
 // NOT IMPLEMENTED //////////////////////////////////////////////////////
 private :
