@@ -40,6 +40,8 @@ class QuadratureBase(PetscComponent):
     ## Python object for managing Quadrature facilities and properties.
     ##
     ## \b Properties
+    ## @li \b scheme Name of quadrature scheme.
+    ## @li \b order Order of quadrature scheme.
     ## @li \b min_jacobian Minimum allowable determinant of Jacobian.
     ## @li \b check_conditoning Check element matrices for 
     ##   ill-conditioning.
@@ -49,6 +51,12 @@ class QuadratureBase(PetscComponent):
 
     import pyre.inventory
 
+    scheme = pyre.inventory.str("scheme", default="Gauss-Jacobi", validator=pyre.inventory.choice(["Gauss-Jacobi", "Collocated"]))
+    scheme.meta['tip'] = "Name of quadrature scheme."
+
+    order = pyre.inventory.int("order", default=1, validator=pyre.inventory.greaterEqual(0))
+    order.meta['tip'] = "Order of quadrature scheme."
+    
     minJacobian = pyre.inventory.float("min_jacobian", default=1.0e-06)
     minJacobian.meta['tip'] = "Minimum allowable determinant of Jacobian."
 
@@ -105,6 +113,8 @@ class QuadratureBase(PetscComponent):
     Set members based using inventory.
     """
     PetscComponent._configure(self)
+    self.scheme = self.inventory.scheme
+    self.order = self.inventory.order
     self.minJacobian(self.inventory.minJacobian)
     self.checkConditioning(self.inventory.checkConditioning)
     self.cell = self.inventory.cell
@@ -137,6 +147,17 @@ class Quadrature(QuadratureBase, ModuleQuadrature):
     """
     Initialize C++ quadrature object.
     """
+    scheme = self.GAUSS_JACOBI
+    if self.scheme == "Gauss-Jacobi":
+      scheme = self.GAUSS_JACOBI
+    elif self.scheme == "Collocated":
+      scheme = self.COLLOCATED
+    else:
+      raise ValueError("Unknown quadrature scheme '%s'." % self.scheme)
+    
+    ModuleQuadrature.scheme(self, scheme)
+    ModuleQuadrature.order(self, self.order)
+    
     import numpy
     from pylith.utils.utils import sizeofPylithScalar
     size = sizeofPylithScalar()

@@ -52,6 +52,30 @@ class TestMeshQuadrature(unittest.TestCase):
   Unit testing of Python Quadrature object.
   """
 
+  def test_scheme(self):
+    """
+    Test scheme().
+    """
+    q = Quadrature()
+    self.assertEqual(q.GAUSS_JACOBI, q.scheme())
+    scheme = q.COLLOCATED
+    q.scheme(scheme)
+    self.assertEqual(scheme, q.scheme())
+    return
+    
+
+  def test_order(self):
+    """
+    Test order().
+    """
+    q = Quadrature()
+    self.assertEqual(1, q.order())
+    order = 2
+    q.order(order)
+    self.assertEqual(order, q.order())
+    return
+    
+
   def test_minJacobian(self):
     """
     Test minJacobian().

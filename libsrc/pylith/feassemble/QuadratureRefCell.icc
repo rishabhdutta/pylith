@@ -20,6 +20,34 @@
 #error "QuadratureRefCell.icc must be included only from QuadratureRefCell.hh"
 #else
 
+// Set quadrature scheme.
+inline
+void
+pylith::feassemble::QuadratureRefCell::scheme(SchemeEnum value) {
+  _scheme = value;
+}
+
+// Set quadrature scheme.
+inline
+pylith::feassemble::QuadratureRefCell::SchemeEnum
+pylith::feassemble::QuadratureRefCell::scheme(void) const {
+  return _scheme;
+}
+
+// Set quadrature order.
+inline
+void
+pylith::feassemble::QuadratureRefCell::order(const int value) {
+  _order = value;
+}
+
+// Get quadrature order.
+inline
+int
+pylith::feassemble::QuadratureRefCell::order(void) const {
+  return _order;
+}
+
 // Get minimum allowable Jacobian.
 inline
 PylithScalar

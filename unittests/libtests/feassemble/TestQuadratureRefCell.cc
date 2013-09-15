@@ -42,7 +42,47 @@ pylith::feassemble::TestQuadratureRefCell::testConstructor(void)
   QuadratureRefCell q;
 
   PYLITH_METHOD_END;
-} // testMinJacobian
+} // testConstructor
+
+// ----------------------------------------------------------------------
+// Test scheme()
+void
+pylith::feassemble::TestQuadratureRefCell::testScheme(void)
+{ // testScheme
+  PYLITH_METHOD_BEGIN;
+
+  QuadratureRefCell q;
+
+  CPPUNIT_ASSERT_EQUAL(QuadratureRefCell::GAUSS_JACOBI, q.scheme());
+
+  QuadratureRefCell::SchemeEnum scheme = QuadratureRefCell::COLLOCATED;
+  q.scheme(scheme);
+  CPPUNIT_ASSERT_EQUAL(scheme, q.scheme());
+
+  PYLITH_METHOD_END;
+} // testScheme
+
+// ----------------------------------------------------------------------
+// Test order()
+void
+pylith::feassemble::TestQuadratureRefCell::testOrder(void)
+{ // testOrder
+  PYLITH_METHOD_BEGIN;
+
+  QuadratureRefCell q;
+
+  CPPUNIT_ASSERT_EQUAL(1, q.order());
+
+  PylithInt order = 2;
+  q.order(order);
+  CPPUNIT_ASSERT_EQUAL(order, q.order());
+
+  order = 0;
+  q.order(order);
+  CPPUNIT_ASSERT_EQUAL(order, q.order());
+
+  PYLITH_METHOD_END;
+} // testOrder
 
 // ----------------------------------------------------------------------
 // Test minJacobian()

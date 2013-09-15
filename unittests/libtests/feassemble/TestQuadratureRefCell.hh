@@ -45,6 +45,8 @@ class pylith::feassemble::TestQuadratureRefCell : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE( TestQuadratureRefCell );
 
   CPPUNIT_TEST( testConstructor );
+  CPPUNIT_TEST( testScheme );
+  CPPUNIT_TEST( testOrder );
   CPPUNIT_TEST( testMinJacobian );
   CPPUNIT_TEST( testRefGeometry );
   CPPUNIT_TEST( testInitialize );
@@ -56,6 +58,12 @@ public :
 
   /// Test constructor.
   void testConstructor(void);
+
+  /// Test scheme.
+  void testScheme(void);
+
+  /// Test order.
+  void testOrder(void);
 
   /// Test minJacobian()
   void testMinJacobian(void);

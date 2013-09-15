@@ -27,6 +27,14 @@ namespace pylith {
     class QuadratureRefCell
     { // Quadrature
 
+      // PUBLIC ENUMS ////////////////////////////////////////////////////
+    public :
+
+      enum SchemeEnum {
+	GAUSS_JACOBI=0, ///< Gauss Jacobi
+	COLLOCATED=1, ///< Quadadrature points collocated at vertices.
+      }; // SchemeEnum
+
       // PUBLIC METHODS /////////////////////////////////////////////////
     public :
 
@@ -128,6 +136,30 @@ namespace pylith {
        */
       const CellGeometry& refGeometry(void) const;
       
+      /** Set quadrature scheme.
+       *
+       * @param value Quadrature scheme.
+       */
+      void scheme(SchemeEnum value);
+      
+      /** Get quadrature scheme.
+       *
+       * @returns Quadrature scheme.
+       */
+      SchemeEnum scheme(void) const;
+      
+      /** Set quadrature order.
+       *
+       * @param value Quadrature order.
+       */
+      void order(const int value);
+
+      /** Get quadrature order.
+       *
+       * @returns Quadrature order.
+       */
+      int order(void) const;
+
       /** Set minimum allowable determinant of Jacobian.
        *
        * @param tolerance Minimum allowable value for Jacobian

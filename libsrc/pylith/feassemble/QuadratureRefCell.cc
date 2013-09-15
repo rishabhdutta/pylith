@@ -31,6 +31,8 @@
 // ----------------------------------------------------------------------
 // Constructor
 pylith::feassemble::QuadratureRefCell::QuadratureRefCell(void) :
+  _scheme(GAUSS_JACOBI),
+  _order(1),
   _minJacobian(0),
   _cellDim(0),
   _numBasis(0),
