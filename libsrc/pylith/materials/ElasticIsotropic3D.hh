@@ -66,6 +66,12 @@ public :
   PylithScalar stableTimeStepImplicit(const topology::Mesh& mesh,
 				      topology::Field* field =0);
 
+  /** Set elastic/inelastic and compressible/incompressible behavior.
+   *
+   * @param value Enum that selects from different combinations.
+   */
+  void setMaterialBehavior(const MaterialBehaviorEnum value);
+
   // PROTECTED METHODS //////////////////////////////////////////////////
 protected :
 

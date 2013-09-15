@@ -198,12 +198,12 @@ public :
 				      feassemble::Quadrature* quadrature,
 				      topology::Field* field =0);
 
-  /** Set whether elastic or inelastic constitutive relations are used.
+  /** Set elastic/inelastic and compressible/incompressible behavior.
    *
-   * @param flag True to use elastic, false to use inelastic.
+   * @param value Enum that selects from different combinations.
    */
   virtual
-  void useElasticBehavior(const bool flag);
+  void setMaterialBehavior(const MaterialBehaviorEnum value);
 
   /** Get initial stress/strain fields.
    *

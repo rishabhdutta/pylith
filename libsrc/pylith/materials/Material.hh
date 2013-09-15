@@ -48,6 +48,16 @@ class pylith::materials::Material
 { // class Material
   friend class TestMaterial; // unit testing
 
+  // PUBLIC ENUMS /////////////////////////////////////////////////////
+public :
+
+  enum MaterialBehaviorEnum {
+    ELASTIC_COMPRESSIBLE=0, ///< Elastic compressible material.
+    INELASTIC_COMPRESSIBLE=1, ///< Inelastic compressible material.
+    ELASTIC_INCOMPRESSIBLE=2, ///< Elastic incompressible material.
+    INELASTIC_INCOMPRESSIBLE=3, ///< Inelastic incompressible material.
+  }; // MaterialBehaviorEnum
+
   // PUBLIC METHODS /////////////////////////////////////////////////////
 public :
 
@@ -166,12 +176,12 @@ public :
   /// current state.
   void resetNeedNewJacobian(void);
 
-  /** Set whether elastic or inelastic constitutive relations are used.
+  /** Set elastic/inelastic and compressible/incompressible behavior.
    *
-   * @param flag True to use elastic, false to use inelastic.
+   * @param value Enum that selects from different combinations.
    */
   virtual
-  void useElasticBehavior(const bool flag);
+  void setMaterialBehavior(const MaterialBehaviorEnum value);
 
   /** Check whether material has a field as a property.
    *

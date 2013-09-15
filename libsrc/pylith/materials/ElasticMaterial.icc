@@ -36,10 +36,10 @@ pylith::materials::ElasticMaterial::dbInitialStrain(spatialdata::spatialdb::Spat
   _dbInitialStrain = db;
 }
 
-// Set whether elastic or inelastic constitutive relations are used.
+// Set elastic/inelastic and compressible/incompressible behavior.
 inline
 void
-pylith::materials::ElasticMaterial::useElasticBehavior(const bool flag) {
+pylith::materials::ElasticMaterial::setMaterialBehavior(const MaterialBehaviorEnum value) {
 } // useElasticBehavior
 
 // Get flag indicating whether material implements an empty

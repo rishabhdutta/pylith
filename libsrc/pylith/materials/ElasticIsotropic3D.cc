@@ -95,7 +95,10 @@ pylith::materials::ElasticIsotropic3D::ElasticIsotropic3D(void) :
 			   _ElasticIsotropic3D::numDBProperties,
 			   0, 0,
 			   0, 0))
+  _calcElasticConstsFn(0),
+  _calcStressFn(0)
 { // constructor
+  setMaterialBehavior(0);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -103,6 +106,39 @@ pylith::materials::ElasticIsotropic3D::ElasticIsotropic3D(void) :
 pylith::materials::ElasticIsotropic3D::~ElasticIsotropic3D(void)
 { // destructor
 } // destructor
+
+// ----------------------------------------------------------------------
+// Set elastic/inelastic and compressible/incompressible behavior.
+void
+pylith::materials::ElasticIsotropic3D::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case ELASTIC_COMPRESSIBLE :
+    _calcStressFn =
+      &pylith::materials::ElasticIsotropic3D::_calcStressCompressible;
+    _calcElasticConstsFn =
+      &pylith::materials::ElasticIsotropic3D::_calcElasticConstsCompressible;
+  case INELASTIC_COMPRESSIBLE :
+    _calcStressFn =
+      &pylith::materials::ElasticIsotropic3D::_calcStressCompressible;
+    _calcElasticConstsFn =
+      &pylith::materials::ElasticIsotropic3D::_calcElasticConstsCompressible;
+  case ELASTIC_INCOMPRESSIBLE :
+    _calcStressFn =
+      &pylith::materials::ElasticIsotropic3D::_calcStressIncompressible;
+    _calcElasticConstsFn =
+      &pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible;
+  case INELASTIC_INCOMPRESSIBLE :
+    _calcStressFn =
+      &pylith::materials::ElasticIsotropic3D::_calcStressIncompressible;
+    _calcElasticConstsFn =
+      &pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute properties from values in spatial database.
@@ -195,22 +231,23 @@ pylith::materials::ElasticIsotropic3D::_dimProperties(PylithScalar* const values
 } // _dimProperties
 
 // ----------------------------------------------------------------------
-// Compute stress tensor at location from properties.
+// Compute complete stress tensor at location from properties.
 void
-pylith::materials::ElasticIsotropic3D::_calcStress(PylithScalar* const stress,
-						   const int stressSize,
-						   const PylithScalar* properties,
-						   const int numProperties,
-						   const PylithScalar* stateVars,
-						   const int numStateVars,
-						   const PylithScalar* totalStrain,
-						   const int strainSize,
-						   const PylithScalar* initialStress,
-						   const int initialStressSize,
-						   const PylithScalar* initialStrain,
-						   const int initialStrainSize,
-						   const bool computeStateVars)
-{ // _calcStress
+pylith::materials::ElasticIsotropic3D::_calcStressCompressible(
+					PylithScalar* const stress,
+					const int stressSize,
+					const PylithScalar* properties,
+					const int numProperties,
+					const PylithScalar* stateVars,
+					const int numStateVars,
+					const PylithScalar* totalStrain,
+					const int strainSize,
+					const PylithScalar* initialStress,
+					const int initialStressSize,
+					const PylithScalar* initialStrain,
+					const int initialStrainSize,
+					const bool computeStateVars)
+{ // _calcStressCompressible
   assert(stress);
   assert(_ElasticIsotropic3D::tensorSize == stressSize);
   assert(properties);
@@ -245,12 +282,80 @@ pylith::materials::ElasticIsotropic3D::_calcStress(PylithScalar* const stress,
   stress[5] = mu2 * e13 + initialStress[5];
 
   PetscLogFlops(25);
-} // _calcStress
+} // _calcStressCompressible
 
 // ----------------------------------------------------------------------
-// Compute derivative of elasticity matrix at location from properties.
+// Compute deviatoric stress tensor at location from properties.
 void
-pylith::materials::ElasticIsotropic3D::_calcElasticConsts(
+pylith::materials::ElasticIsotropic3D::_calcStressIncompressible(
+					PylithScalar* const stress,
+					const int stressSize,
+					const PylithScalar* properties,
+					const int numProperties,
+					const PylithScalar* stateVars,
+					const int numStateVars,
+					const PylithScalar* totalStrain,
+					const int strainSize,
+					const PylithScalar* initialStress,
+					const int initialStressSize,
+					const PylithScalar* initialStrain,
+					const int initialStrainSize,
+					const bool computeStateVars)
+{ // _calcStressIncompressible
+  assert(stress);
+  assert(_ElasticIsotropic3D::tensorSize == stressSize);
+  assert(properties);
+  assert(_numPropsQuadPt == numProperties);
+  assert(0 == numStateVars);
+  assert(totalStrain);
+  assert(_ElasticIsotropic3D::tensorSize == strainSize);
+  assert(initialStress);
+  assert(_ElasticIsotropic3D::tensorSize == initialStressSize);
+  assert(initialStrain);
+  assert(_ElasticIsotropic3D::tensorSize == initialStrainSize);
+
+  const PylithScalar mu = properties[p_mu];
+  const PylithScalar mu2 = 2.0 * mu;
+
+  const PylithScalar meanStrainTotal = (totalStrain[0] +
+					totalStrain[1] +
+					totalStrain[2])/3.0;
+  const PylithScalar meanStrainInitial = (initialStrain[0] +
+					  initialStrain[1] +
+					  initialStrain[2])/3.0;
+  const PylithScalar meanStressInitial = (initialStress[0] +
+					  initialStress[1] +
+					  initialStress[2])/3.0;
+  const PylithScalar devStrainInitial[] = {initialStrain[0] - meanStrainInitial,
+					   initialStrain[1] - meanStrainInitial,
+					   initialStrain[2] - meanStrainInitial,
+					   initialStrain[3],
+					   initialStrain[4],
+					   initialStrain[5]};
+  const PylithScalar e11 = totalStrain[0] - meanStrainTotal -
+    devStrainInitial[0];
+  const PylithScalar e22 = totalStrain[1] - meanStrainTotal -
+    devStrainInitial[1];
+  const PylithScalar e33 = totalStrain[2] - meanStrainTotal -
+    devStrainInitial[2];
+  const PylithScalar e12 = totalStrain[3] - devStrainInitial[3];
+  const PylithScalar e23 = totalStrain[4] - devStrainInitial[4];
+  const PylithScalar e13 = totalStrain[5] - devStrainInitial[5];
+  
+  stress[0] = mu2 * e11 + initialStress[0] - meanStressInitial;
+  stress[1] = mu2 * e22 + initialStress[1] - meanStressInitial;
+  stress[2] = mu2 * e33 + initialStress[2] - meanStressInitial;
+  stress[3] = mu2 * e12 + initialStress[3];
+  stress[4] = mu2 * e23 + initialStress[4];
+  stress[5] = mu2 * e13 + initialStress[5];
+
+  PetscLogFlops(37);
+} // _calcStressIncompressible
+
+// ----------------------------------------------------------------------
+// Compute derivative of complete elasticity matrix at location from properties.
+void
+pylith::materials::ElasticIsotropic3D::_calcElasticConstsCompressible(
 					     PylithScalar* const elasticConsts,
 					     const int numElasticConsts,
 					     const PylithScalar* properties,
@@ -263,7 +368,7 @@ pylith::materials::ElasticIsotropic3D::_calcElasticConsts(
 					     const int initialStressSize,
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize)
-{ // _calcElasticConsts
+{ // _calcElasticConstsCompressible
   assert(0 != elasticConsts);
   assert(_ElasticIsotropic3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -320,13 +425,90 @@ pylith::materials::ElasticIsotropic3D::_calcElasticConsts(
   elasticConsts[35] = mu2; // C1313
 
   PetscLogFlops(2);
-} // _calcElasticConsts
+} // _calcElasticConstsCompressible
+
+// ----------------------------------------------------------------------
+// Compute derivative of deviatoric elasticity matrix at location from
+// properties.
+void
+pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible(
+					     PylithScalar* const elasticConsts,
+					     const int numElasticConsts,
+					     const PylithScalar* properties,
+					     const int numProperties,
+					     const PylithScalar* stateVars,
+					     const int numStateVars,
+					     const PylithScalar* totalStrain,
+					     const int strainSize,
+					     const PylithScalar* initialStress,
+					     const int initialStressSize,
+					     const PylithScalar* initialStrain,
+					     const int initialStrainSize)
+{ // _calcElasticConstsIncompressible
+  assert(0 != elasticConsts);
+  assert(_ElasticIsotropic3D::numElasticConsts == numElasticConsts);
+  assert(0 != properties);
+  assert(_numPropsQuadPt == numProperties);
+  assert(0 == numStateVars);
+  assert(0 != totalStrain);
+  assert(_ElasticIsotropic3D::tensorSize == strainSize);
+  assert(0 != initialStress);
+  assert(_ElasticIsotropic3D::tensorSize == initialStressSize);
+  assert(0 != initialStrain);
+  assert(_ElasticIsotropic3D::tensorSize == initialStrainSize);
+ 
+  const PylithScalar mu = properties[p_mu];
+
+  const PylithScalar mu2 = 2.0 * mu;
+   
+  elasticConsts[ 0] = 2mu; // C1111
+  elasticConsts[ 1] = 0.0; // C1122
+  elasticConsts[ 2] = 0.0; // C1133
+  elasticConsts[ 3] = 0.0; // C1112
+  elasticConsts[ 4] = 0.0; // C1123
+  elasticConsts[ 5] = 0.0; // C1113
+  elasticConsts[ 6] = 0.0; // C2211
+  elasticConsts[ 7] = 2mu; // C2222
+  elasticConsts[ 8] = 0.0; // C2233
+  elasticConsts[ 9] = 0.0; // C2212
+  elasticConsts[10] = 0.0; // C2223
+  elasticConsts[11] = 0.0; // C2213
+  elasticConsts[12] = 0.0; // C3311
+  elasticConsts[13] = 0.0; // C3322
+  elasticConsts[14] = 2mu; // C3333
+  elasticConsts[15] = 0.0; // C3312
+  elasticConsts[16] = 0.0; // C3323
+  elasticConsts[17] = 0.0; // C3313
+  elasticConsts[18] = 0.0; // C1211
+  elasticConsts[19] = 0.0; // C1222
+  elasticConsts[20] = 0.0; // C1233
+  elasticConsts[21] = mu2; // C1212
+  elasticConsts[22] = 0.0; // C1223
+  elasticConsts[23] = 0.0; // C1213
+  elasticConsts[24] = 0.0; // C2311
+  elasticConsts[25] = 0.0; // C2322
+  elasticConsts[26] = 0.0; // C2333
+  elasticConsts[27] = 0.0; // C2312
+  elasticConsts[28] = mu2; // C2323
+  elasticConsts[29] = 0.0; // C2313
+  elasticConsts[30] = 0.0; // C1311
+  elasticConsts[31] = 0.0; // C1322
+  elasticConsts[32] = 0.0; // C1333
+  elasticConsts[33] = 0.0; // C1312
+  elasticConsts[34] = 0.0; // C1323
+  elasticConsts[35] = mu2; // C1313
+
+  PetscLogFlops(1);
+} // _calcElasticConstsIncompressible
+
 
 // ----------------------------------------------------------------------
 // Get stable time step for implicit time integration.
 PylithScalar
-pylith::materials::ElasticIsotropic3D::stableTimeStepImplicit(const topology::Mesh& mesh,
-							      topology::Field* field) {
+pylith::materials::ElasticIsotropic3D::stableTimeStepImplicit(
+						const topology::Mesh& mesh,
+						topology::Field* field)
+{ // stableTimeStepImplicit
   return ElasticMaterial::_stableTimeStepImplicitMax(mesh, field);
 } // stableTimeStepImplicitMax
 
@@ -346,11 +528,12 @@ pylith::materials::ElasticIsotropic3D::_stableTimeStepImplicit(
 // ----------------------------------------------------------------------
 // Get stable time step for explicit time integration.
 PylithScalar
-pylith::materials::ElasticIsotropic3D::_stableTimeStepExplicit(const PylithScalar* properties,
-							       const int numProperties,
-							       const PylithScalar* stateVars,
-							       const int numStateVars,
-							       const double minCellWidth) const
+pylith::materials::ElasticIsotropic3D::_stableTimeStepExplicit(
+						const PylithScalar* properties,
+						const int numProperties,
+						const PylithScalar* stateVars,
+						const int numStateVars,
+						const double minCellWidth) const
 { // _stableTimeStepExplicit
   assert(properties);
   assert(_numPropsQuadPt == numProperties);
