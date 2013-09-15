@@ -160,6 +160,7 @@ libpylith_la_SOURCES = \
 	topology/Mesh.cc \
 	topology/MeshOps.cc \
 	topology/Field.cc \
+	topology/FieldOps.cc \
 	topology/Fields.cc \
 	topology/Distributor.cc \
 	topology/ReverseCuthillMcKee.cc \
