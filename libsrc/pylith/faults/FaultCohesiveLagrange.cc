@@ -148,13 +148,24 @@ pylith::faults::FaultCohesiveLagrange::splitField(topology::Field* field)
 
   const int numVertices = _cohesiveVertices.size();
   for(PetscInt iVertex = 0; iVertex < numVertices; ++iVertex) {
-    const int v_lagrange = _cohesiveVertices[iVertex].lagrange;
+    const PetscInt v_lagrange = _cohesiveVertices[iVertex].lagrange;
+    const PetscInt dof        = spaceDim;
 
-    PetscInt dof;
-    err = PetscSectionGetDof(fieldSection, v_lagrange, &dof);PYLITH_CHECK_ERROR(err);assert(spaceDim == dof);
+    err = PetscSectionSetDof(fieldSection, v_lagrange, dof);PYLITH_CHECK_ERROR(err);
     err = PetscSectionSetFieldDof(fieldSection, v_lagrange, 0, 0);PYLITH_CHECK_ERROR(err);
     err = PetscSectionSetFieldDof(fieldSection, v_lagrange, 1, dof);PYLITH_CHECK_ERROR(err);
   } // for
+  PetscInt vStart, vEnd;
+
+  err = DMPlexGetDepthStratum(dmMesh, 0, &vStart, &vEnd);PYLITH_CHECK_ERROR(err);
+  err = DMPlexGetHybridBounds(dmMesh, NULL, NULL, NULL, &vEnd);PYLITH_CHECK_ERROR(err);
+  for (PetscInt v = vStart; v < vEnd; ++v) {
+    PetscInt dof;
+
+    err = PetscSectionGetDof(fieldSection, v, &dof);PYLITH_CHECK_ERROR(err);
+    err = PetscSectionSetDof(fieldSection, v, dof - spaceDim);PYLITH_CHECK_ERROR(err);
+    err = PetscSectionSetFieldDof(fieldSection, v, 1, 0);PYLITH_CHECK_ERROR(err);
+  }
 
   PYLITH_METHOD_END;
 } // splitField
