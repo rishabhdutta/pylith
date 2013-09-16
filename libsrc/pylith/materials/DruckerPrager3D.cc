@@ -159,7 +159,7 @@ pylith::materials::DruckerPrager3D::DruckerPrager3D(void) :
   _calcStressFn(0),
   _updateStateVarsFn(0)
 { // constructor
-  useElasticBehavior(false);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -185,27 +185,41 @@ pylith::materials::DruckerPrager3D::fitMohrCoulomb(FitMohrCoulombEnum value)
 } // fitMohrCoulomb
 
 // ----------------------------------------------------------------------
-// Set whether elastic or inelastic constitutive relations are used.
+// Set static/timedependent and compressible/incompressible behavior.
 void
-pylith::materials::DruckerPrager3D::useElasticBehavior(const bool flag)
-{ // useElasticBehavior
-  if (flag) {
+pylith::materials::DruckerPrager3D::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::DruckerPrager3D::_calcStressElastic;
+      &pylith::materials::DruckerPrager3D::_calcStressElasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::DruckerPrager3D::_calcElasticConstsElastic;
+      &pylith::materials::DruckerPrager3D::_calcElasticConstsElasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::DruckerPrager3D::_updateStateVarsElastic;
-
-  } else {
+      &pylith::materials::DruckerPrager3D::_updateStateVarsElasticCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::DruckerPrager3D::_calcStressElastoplastic;
+      &pylith::materials::DruckerPrager3D::_calcStressElastoplasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplastic;
+      &pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::DruckerPrager3D::_updateStateVarsElastoplastic;
-  } // if/else
-} // useElasticBehavior
+      &pylith::materials::DruckerPrager3D::_updateStateVarsElastoplasticCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute properties from values in spatial database.
@@ -459,7 +473,7 @@ pylith::materials::DruckerPrager3D::_stableTimeStepExplicit(const PylithScalar* 
 // Compute stress tensor at location from properties as an elastic
 // material.
 void
-pylith::materials::DruckerPrager3D::_calcStressElastic(
+pylith::materials::DruckerPrager3D::_calcStressElasticCompressible(
 				         PylithScalar* const stress,
 					 const int stressSize,
 					 const PylithScalar* properties,
@@ -473,7 +487,7 @@ pylith::materials::DruckerPrager3D::_calcStressElastic(
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize,
 					 const bool computeStateVars)
-{ // _calcStressElastic
+{ // _calcStressElasticCompressible
   assert(stress);
   assert(_DruckerPrager3D::tensorSize == stressSize);
   assert(properties);
@@ -509,13 +523,13 @@ pylith::materials::DruckerPrager3D::_calcStressElastic(
   stress[5] = mu2 * e13 + initialStress[5];
 
   PetscLogFlops(25);
-} // _calcStressElastic
+} // _calcStressElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties as an elastoplastic
 // material.
 void
-pylith::materials::DruckerPrager3D::_calcStressElastoplastic(
+pylith::materials::DruckerPrager3D::_calcStressElastoplasticCompressible(
 					PylithScalar* const stress,
 					const int stressSize,
 					const PylithScalar* properties,
@@ -529,7 +543,7 @@ pylith::materials::DruckerPrager3D::_calcStressElastoplastic(
 					const PylithScalar* initialStrain,
 					const int initialStrainSize,
 					const bool computeStateVars)
-{ // _calcStressElastoplastic
+{ // _calcStressElastoplasticCompressible
   assert(stress);
   assert(_DruckerPrager3D::tensorSize == stressSize);
   assert(properties);
@@ -759,12 +773,12 @@ pylith::materials::DruckerPrager3D::_calcStressElastoplastic(
   std::cout << "  yieldFunctionTest: " << yieldFunctionTest << std::endl;
 #endif
 
-} // _calcStressElastoplastic
+} // _calcStressElastoplasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties.
 void
-pylith::materials::DruckerPrager3D::_calcElasticConstsElastic(
+pylith::materials::DruckerPrager3D::_calcElasticConstsElasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -777,7 +791,7 @@ pylith::materials::DruckerPrager3D::_calcElasticConstsElastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsElastic
+{ // _calcElasticConstsElasticCompressible
   assert(0 != elasticConsts);
   assert(_DruckerPrager3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -835,13 +849,13 @@ pylith::materials::DruckerPrager3D::_calcElasticConstsElastic(
   elasticConsts[35] = mu2; // C1313
 
   PetscLogFlops(2);
-} // _calcElasticConstsElastic
+} // _calcElasticConstsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties
 // as an elastoplastic material.
 void
-pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplastic(
+pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -854,7 +868,7 @@ pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsElastoplastic
+{ // _calcElasticConstsElastoplasticCompressible
   assert(0 != elasticConsts);
   assert(_DruckerPrager3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -1107,12 +1121,12 @@ pylith::materials::DruckerPrager3D::_calcElasticConstsElastoplastic(
     PetscLogFlops(1);
   } // else
 
-} // _calcElasticConstsElastoplastic
+} // _calcElasticConstsElastoplasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::DruckerPrager3D::_updateStateVarsElastic(
+pylith::materials::DruckerPrager3D::_updateStateVarsElasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1123,7 +1137,7 @@ pylith::materials::DruckerPrager3D::_updateStateVarsElastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsElastic
+{ // _updateStateVarsElasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -1140,12 +1154,12 @@ pylith::materials::DruckerPrager3D::_updateStateVarsElastic(
   } // for
 
   _needNewJacobian = true;
-} // _updateStateVarsElastic
+} // _updateStateVarsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::DruckerPrager3D::_updateStateVarsElastoplastic(
+pylith::materials::DruckerPrager3D::_updateStateVarsElastoplasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1156,7 +1170,7 @@ pylith::materials::DruckerPrager3D::_updateStateVarsElastoplastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsElastoplastic
+{ // _updateStateVarsElastoplasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -1326,6 +1340,6 @@ pylith::materials::DruckerPrager3D::_updateStateVarsElastoplastic(
 
   _needNewJacobian = true;
 
-} // _updateStateVarsElastoplastic
+} // _updateStateVarsElastoplasticCompressible
 
 // End of file 

@@ -193,7 +193,7 @@ pylith::materials::GenMaxwellPlaneStrain::GenMaxwellPlaneStrain(void) :
   _calcStressFn(0),
   _updateStateVarsFn(0)  
 { // constructor
-  useElasticBehavior(false);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
   _viscousStrain.resize(_GenMaxwellPlaneStrain::numMaxwellModels * 4);
 } // constructor
 
@@ -204,27 +204,41 @@ pylith::materials::GenMaxwellPlaneStrain::~GenMaxwellPlaneStrain(void)
 } // destructor
 
 // ----------------------------------------------------------------------
-// Set whether elastic or inelastic constitutive relations are used.
+// Set static/timedependent and compressible/incompressible behavior.
 void
-pylith::materials::GenMaxwellPlaneStrain::useElasticBehavior(const bool flag)
-{ // useElasticBehavior
-  if (flag) {
+pylith::materials::GenMaxwellPlaneStrain::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_calcStressElastic;
+      &pylith::materials::GenMaxwellPlaneStrain::_calcStressElasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElastic;
+      &pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElastic;
-
-  } else {
+      &pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElasticCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_calcStressViscoelastic;
+      &pylith::materials::GenMaxwellPlaneStrain::_calcStressElastoplasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsViscoelastic;
+      &pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElastoplasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsViscoelastic;
-  } // if/else
-} // useElasticBehavior
+      &pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElastoplasticCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute parameters from values in spatial database.
@@ -434,7 +448,7 @@ pylith::materials::GenMaxwellPlaneStrain::_calcDensity(PylithScalar* const densi
 // Compute stress tensor at location from properties as an elastic
 // material.
 void
-pylith::materials::GenMaxwellPlaneStrain::_calcStressElastic(
+pylith::materials::GenMaxwellPlaneStrain::_calcStressElasticCompressible(
 					     PylithScalar* const stress,
 					     const int stressSize,
 					     const PylithScalar* properties,
@@ -448,7 +462,7 @@ pylith::materials::GenMaxwellPlaneStrain::_calcStressElastic(
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize,
 					     const bool computeStateVars)
-{ // _calcStressElastic
+{ // _calcStressElasticCompressible
   assert(0 != stress);
   assert(_GenMaxwellPlaneStrain::tensorSize == stressSize);
   assert(0 != properties);
@@ -478,14 +492,14 @@ pylith::materials::GenMaxwellPlaneStrain::_calcStressElastic(
   stress[2] = mu2 * e12 + initialStress[2];
 
   PetscLogFlops(14);
-} // _calcStressElastic
+} // _calcStressElasticCompressible
 
 
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties as a viscoelastic
 // material.
 void
-pylith::materials::GenMaxwellPlaneStrain::_calcStressViscoelastic(
+pylith::materials::GenMaxwellPlaneStrain::_calcStressViscoelasticCompressible(
 					     PylithScalar* const stress,
 					     const int stressSize,
 					     const PylithScalar* properties,
@@ -499,7 +513,7 @@ pylith::materials::GenMaxwellPlaneStrain::_calcStressViscoelastic(
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize,
 					     const bool computeStateVars)
-{ // _calcStressViscoelastic
+{ // _calcStressViscoelasticCompressible
   assert(0 != stress);
   assert(_GenMaxwellPlaneStrain::tensorSize == stressSize);
   assert(0 != properties);
@@ -589,12 +603,12 @@ pylith::materials::GenMaxwellPlaneStrain::_calcStressViscoelastic(
   } // for
 
   PetscLogFlops((9 + 2 * numMaxwellModels) * tensorSize);
-} // _calcStressViscoelastic
+} // _calcStressViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties.
 void
-pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElastic(
+pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElasticCompressible(
 					PylithScalar* const elasticConsts,
 					const int numElasticConsts,
 					const PylithScalar* properties,
@@ -607,7 +621,7 @@ pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElastic(
 					const int initialStressSize,
 					const PylithScalar* initialStrain,
 					const int initialStrainSize)
-{ // _calcElasticConstsElastic
+{ // _calcElasticConstsElasticCompressible
   assert(0 != elasticConsts);
   assert(_GenMaxwellPlaneStrain::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -638,13 +652,13 @@ pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsElastic(
   elasticConsts[ 8] = mu2; // C1212
 
   PetscLogFlops(2);
-} // _calcElasticConstsElastic
+} // _calcElasticConstsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties
 // as a viscoelastic material.
 void
-pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsViscoelastic(
+pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsViscoelasticCompressible(
 					PylithScalar* const elasticConsts,
 					const int numElasticConsts,
 					const PylithScalar* properties,
@@ -657,7 +671,7 @@ pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsViscoelastic(
 					const int initialStressSize,
 					const PylithScalar* initialStrain,
 					const int initialStrainSize)
-{ // _calcElasticConstsViscoelastic
+{ // _calcElasticConstsViscoelasticCompressible
   assert(0 != elasticConsts);
   assert(_GenMaxwellPlaneStrain::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -706,12 +720,12 @@ pylith::materials::GenMaxwellPlaneStrain::_calcElasticConstsViscoelastic(
   elasticConsts[ 8] = 2.0 * mu * shearFac; // C1212
 
   PetscLogFlops(15 + 3 * numMaxwellModels);
-} // _calcElasticConstsViscoelastic
+} // _calcElasticConstsViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElastic(
+pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElasticCompressible(
 					    PylithScalar* const stateVars,
 					    const int numStateVars,
 					    const PylithScalar* properties,
@@ -722,7 +736,7 @@ pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElastic(
 					    const int initialStressSize,
 					    const PylithScalar* initialStrain,
 					    const int initialStrainSize)
-{ // _updateStateVarsElastic
+{ // _updateStateVarsElasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -763,12 +777,12 @@ pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsElastic(
   PetscLogFlops(5 + 2 * 4);
 
   _needNewJacobian = true;
-} // _updateStateVarsElastic
+} // _updateStateVarsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsViscoelastic(
+pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsViscoelasticCompressible(
 					    PylithScalar* const stateVars,
 					    const int numStateVars,
 					    const PylithScalar* properties,
@@ -779,7 +793,7 @@ pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsViscoelastic(
 					    const int initialStressSize,
 					    const PylithScalar* initialStrain,
 					    const int initialStrainSize)
-{ // _updateStateVarsViscoelastic
+{ // _updateStateVarsViscoelasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -813,7 +827,7 @@ pylith::materials::GenMaxwellPlaneStrain::_updateStateVarsViscoelastic(
     stateVars[s_viscousStrain3+iComp] = _viscousStrain[index++];
 
   _needNewJacobian = false;
-} // _updateStateVarsViscoelastic
+} // _updateStateVarsViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Get stable time step for implicit time integration.

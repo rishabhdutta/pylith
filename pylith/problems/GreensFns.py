@@ -149,7 +149,7 @@ class GreensFns(Problem):
 
     # Limit material behavior to linear regime
     for material in self.materials.components():
-      material.useElasticBehavior(True)
+      material.setMaterialBehavior("STATIC_COMPRESSIBLE")
 
     nimpulses = self.source.numImpulses()
     ipulse = 0;

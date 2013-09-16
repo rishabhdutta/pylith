@@ -46,6 +46,13 @@ namespace pylith {
        */
       PylithScalar stableTimeStepImplicit(const pylith::topology::Mesh& mesh);
 
+      /** Set elastic/inelastic and compressible/incompressible behavior.
+       *
+       * @param value Enum that selects from different combinations.
+       */
+      void setMaterialBehavior(const MaterialBehaviorEnum value);
+
+
       // PROTECTED METHODS //////////////////////////////////////////////
     protected :
 

@@ -165,7 +165,7 @@ pylith::materials::DruckerPragerPlaneStrain::DruckerPragerPlaneStrain(void) :
   _calcStressFn(0),
   _updateStateVarsFn(0)
 { // constructor
-  useElasticBehavior(false);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -192,27 +192,41 @@ pylith::materials::DruckerPragerPlaneStrain::fitMohrCoulomb(
 } // fitMohrCoulomb
 
 // ----------------------------------------------------------------------
-// Set whether elastic or inelastic constitutive relations are used.
+// Set static/timedependent and compressible/incompressible behavior.
 void
-pylith::materials::DruckerPragerPlaneStrain::useElasticBehavior(const bool flag)
-{ // useElasticBehavior
-  if (flag) {
+pylith::materials::DruckerPragerPlaneStrain::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_calcStressElastic;
+      &pylith::materials::DruckerPragerPlaneStrain::_calcStressElasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastic;
+      &pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastic;
-
-  } else {
+      &pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElasticCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic;
+      &pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplastic;
+      &pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplastic;
-  } // if/else
-} // useElasticBehavior
+      &pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplasticCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute properties from values in spatial database.
@@ -479,7 +493,7 @@ pylith::materials::DruckerPragerPlaneStrain::_stableTimeStepExplicit(const Pylit
 // Compute stress tensor at location from properties as an elastic
 // material.
 void
-pylith::materials::DruckerPragerPlaneStrain::_calcStressElastic(
+pylith::materials::DruckerPragerPlaneStrain::_calcStressElasticCompressible(
 				         PylithScalar* const stress,
 					 const int stressSize,
 					 const PylithScalar* properties,
@@ -493,7 +507,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastic(
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize,
 					 const bool computeStateVars)
-{ // _calcStressElastic
+{ // _calcStressElasticCompressible
   assert(stress);
   assert(_DruckerPragerPlaneStrain::tensorSize == stressSize);
   assert(properties);
@@ -522,13 +536,13 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastic(
   stress[2] = mu2 * e12 + initialStress[2];
 
   PetscLogFlops(14);
-} // _calcStressElastic
+} // _calcStressElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties as an elastoplastic
 // material.
 void
-pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic(
+pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplasticCompressible(
 					PylithScalar* const stress,
 					const int stressSize,
 					const PylithScalar* properties,
@@ -542,7 +556,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic(
 					const PylithScalar* initialStrain,
 					const int initialStrainSize,
 					const bool computeStateVars)
-{ // _calcStressElastoplastic
+{ // _calcStressElastoplasticCompressible
   assert(stress);
   assert(_DruckerPragerPlaneStrain::tensorSize == stressSize);
   assert(properties);
@@ -641,7 +655,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic(
     const PylithScalar yieldFunction =
       3.0 * alphaYield * trialMeanStress + stressInvar2 - beta;
 #if 0 // DEBUGGING
-    std::cout << "Function _calcStressElastoPlastic: elastic" << std::endl;
+    std::cout << "Function _calcStressElastoPlasticCompressible: elastic" << std::endl;
     std::cout << "  alphaYield:       " << alphaYield << std::endl;
     std::cout << "  beta:             " << beta << std::endl;
     std::cout << "  trialMeanStress:  " << trialMeanStress << std::endl;
@@ -792,7 +806,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic(
   
   const PylithScalar yieldFunctionTest = 3.0 * alphaYield * meanStressTest +
       stressInvar2Test - beta;
-  std::cout << "Function _calcStressElastoPlastic: end" << std::endl;
+  std::cout << "Function _calcStressElastoPlasticCompressible: end" << std::endl;
   std::cout << "  alphaYield:        " << alphaYield << std::endl;
   std::cout << "  beta:              " << beta << std::endl;
   std::cout << "  meanStressTest:    " << meanStressTest << std::endl;
@@ -800,12 +814,12 @@ pylith::materials::DruckerPragerPlaneStrain::_calcStressElastoplastic(
   std::cout << "  yieldFunctionTest: " << yieldFunctionTest << std::endl;
 #endif
 
-} // _calcStressElastoplastic
+} // _calcStressElastoplasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties.
 void
-pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastic(
+pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -818,7 +832,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsElastic
+{ // _calcElasticConstsElasticCompressible
   assert(elasticConsts);
   assert(_DruckerPragerPlaneStrain::numElasticConsts == numElasticConsts);
   assert(properties);
@@ -849,13 +863,13 @@ pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastic(
   elasticConsts[ 8] = mu2; // C1212
 
   PetscLogFlops(2);
-} // _calcElasticConstsElastic
+} // _calcElasticConstsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties
 // as an elastoplastic material.
 void
-pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplastic(
+pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -868,7 +882,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsElastoplastic
+{ // _calcElasticConstsElastoplasticCompressible
   assert(elasticConsts);
   assert(_DruckerPragerPlaneStrain::numElasticConsts == numElasticConsts);
   assert(properties);
@@ -960,7 +974,7 @@ pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplastic(
     sqrt(0.5 * scalarProduct2DPS(trialDevStress, trialDevStress));
   const PylithScalar yieldFunction = 3.0 * alphaYield * trialMeanStress + stressInvar2 - beta;
 #if 0 // DEBUGGING
-  std::cout << "Function _calcElasticConstsElastoPlastic:" << std::endl;
+  std::cout << "Function _calcElasticConstsElastoPlasticCompressible:" << std::endl;
   std::cout << "  alphaYield:       " << alphaYield << std::endl;
   std::cout << "  beta:             " << beta << std::endl;
   std::cout << "  trialMeanStress:  " << trialMeanStress << std::endl;
@@ -1077,12 +1091,12 @@ pylith::materials::DruckerPragerPlaneStrain::_calcElasticConstsElastoplastic(
     PetscLogFlops(1);
   } // else
 
-} // _calcElasticConstsElastoplastic
+} // _calcElasticConstsElastoplasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastic(
+pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1093,7 +1107,7 @@ pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsElastic
+{ // _updateStateVarsElasticCompressible
   assert(stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(properties);
@@ -1110,12 +1124,12 @@ pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastic(
   } // for
 
   _needNewJacobian = true;
-} // _updateStateVarsElastic
+} // _updateStateVarsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplastic(
+pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1126,7 +1140,7 @@ pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsElastoplastic
+{ // _updateStateVarsElastoplasticCompressible
   assert(stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(properties);
@@ -1238,7 +1252,7 @@ pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplastic(
   } // if
 
 #if 0 // DEBUGGING
-  std::cout << "Function _updateStateVarsElastoPlastic:" << std::endl;
+  std::cout << "Function _updateStateVarsElastoPlasticCompressible:" << std::endl;
   std::cout << "  alphaYield:       " << alphaYield << std::endl;
   std::cout << "  beta:             " << beta << std::endl;
   std::cout << "  trialMeanStress:  " << trialMeanStress << std::endl;
@@ -1294,6 +1308,6 @@ pylith::materials::DruckerPragerPlaneStrain::_updateStateVarsElastoplastic(
 
   _needNewJacobian = true;
 
-} // _updateStateVarsElastoplastic
+} // _updateStateVarsElastoplasticCompressible
 
 // End of file 

@@ -143,7 +143,7 @@ class TimeDependent(Problem):
 
       # Limit material behavior to elastic regime
       for material in self.materials.components():
-        material.useElasticBehavior(True)
+        material.setMaterialBehavior("STATIC_COMPRESSIBLE")
 
       self.formulation.prestepElastic(t, dt)
       self._eventLogger.stagePop()
@@ -163,7 +163,7 @@ class TimeDependent(Problem):
 
     # Allow inelastic behavior
     for material in self.materials.components():
-      material.useElasticBehavior(False)
+      material.setMaterialBehavior("TIMEDEPENDENT_COMPRESSIBLE")
 
 
     # Normal time loop

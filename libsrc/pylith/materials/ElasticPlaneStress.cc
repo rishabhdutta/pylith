@@ -94,8 +94,11 @@ pylith::materials::ElasticPlaneStress::ElasticPlaneStress(void) :
 			   _ElasticPlaneStress::dbProperties,
 			   _ElasticPlaneStress::numDBProperties,
 			   0, 0,
-			   0, 0))
+			   0, 0)),
+  _calcElasticConstsFn(0),
+  _calcStressFn(0)
 { // constructor
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -103,6 +106,39 @@ pylith::materials::ElasticPlaneStress::ElasticPlaneStress(void) :
 pylith::materials::ElasticPlaneStress::~ElasticPlaneStress(void)
 { // destructor
 } // destructor
+
+// ----------------------------------------------------------------------
+// Set static/timedependent and compressible/incompressible behavior.
+void
+pylith::materials::ElasticPlaneStress::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
+    _calcStressFn = 
+      &pylith::materials::ElasticPlaneStress::_calcStressCompressible;
+    _calcElasticConstsFn = 
+      &pylith::materials::ElasticPlaneStress::_calcElasticConstsCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
+    _calcStressFn = 
+      &pylith::materials::ElasticPlaneStress::_calcStressCompressible;
+    _calcElasticConstsFn = 
+      &pylith::materials::ElasticPlaneStress::_calcElasticConstsCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute parameters from values in spatial database.
@@ -214,20 +250,21 @@ pylith::materials::ElasticPlaneStress::_calcDensity(PylithScalar* const density,
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties.
 void
-pylith::materials::ElasticPlaneStress::_calcStress(PylithScalar* const stress,
-						   const int stressSize,
-						   const PylithScalar* properties,
-						   const int numProperties,
-						   const PylithScalar* stateVars,
-						   const int numStateVars,
-						   const PylithScalar* totalStrain,
-						   const int strainSize,
-						   const PylithScalar* initialStress,
-						   const int initialStressSize,
-						   const PylithScalar* initialStrain,
-						   const int initialStrainSize,
-						   const bool computeStateVars)
-{ // _calcStress
+pylith::materials::ElasticPlaneStress::_calcStressCompressible(
+					PylithScalar* const stress,
+					const int stressSize,
+					const PylithScalar* properties,
+					const int numProperties,
+					const PylithScalar* stateVars,
+					const int numStateVars,
+					const PylithScalar* totalStrain,
+					const int strainSize,
+					const PylithScalar* initialStress,
+					const int initialStressSize,
+					const PylithScalar* initialStrain,
+					const int initialStrainSize,
+					const bool computeStateVars)
+{ // _calcStressCompressible
   assert(0 != stress);
   assert(_ElasticPlaneStress::tensorSize == stressSize);
   assert(0 != properties);
@@ -259,12 +296,12 @@ pylith::materials::ElasticPlaneStress::_calcStress(PylithScalar* const stress,
   stress[2] = mu2 * e12 + initialStress[2];
 
   PetscLogFlops(21);
-} // _calcStress
+} // _calcStressCompressible
 
 // ----------------------------------------------------------------------
 // Compute density at location from properties.
 void
-pylith::materials::ElasticPlaneStress::_calcElasticConsts(
+pylith::materials::ElasticPlaneStress::_calcElasticConstsCompressible(
 					     PylithScalar* const elasticConsts,
 					     const int numElasticConsts,
 					     const PylithScalar* properties,
@@ -277,7 +314,7 @@ pylith::materials::ElasticPlaneStress::_calcElasticConsts(
 					     const int initialStressSize,
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize)
-{ // calcElasticConsts
+{ // calcElasticConstsCompressible
   assert(0 != elasticConsts);
   assert(_ElasticPlaneStress::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -309,7 +346,7 @@ pylith::materials::ElasticPlaneStress::_calcElasticConsts(
   elasticConsts[8] = mu2; // C1212
 
   PetscLogFlops(8);
-} // calcElasticConsts
+} // calcElasticConstsCompressible
 
 // ----------------------------------------------------------------------
 // Get stable time step for implicit time integration.

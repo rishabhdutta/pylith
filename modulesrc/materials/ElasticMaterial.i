@@ -90,12 +90,12 @@ namespace pylith {
       PylithScalar stableTimeStepExplicit(const pylith::topology::Mesh& mesh,
 					  pylith::feassemble::Quadrature* quadrature);
       
-      /** Set whether elastic or inelastic constitutive relations are used.
+      /** Set static/timedependent and compressible/incompressible behavior.
        *
-       * @param flag True to use elastic, false to use inelastic.
+       * @param value Enum that selects from different combinations.
        */
       virtual
-      void useElasticBehavior(const bool flag);
+      void setMaterialBehavior(const MaterialBehaviorEnum value);
 
       /** Get initial stress/strain fields.
        *

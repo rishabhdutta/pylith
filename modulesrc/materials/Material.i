@@ -27,6 +27,16 @@ namespace pylith {
     class Material
     { // class Material
 
+      // PUBLIC ENUMS ///////////////////////////////////////////////////
+    public:
+
+      enum MaterialBehaviorEnum {
+	STATIC_COMPRESSIBLE=0, ///< Static compressible material.
+	TIMEDEPENDENT_COMPRESSIBLE=1, ///< Timedependent compressible material.
+	STATIC_INCOMPRESSIBLE=2, ///< Static incompressible material.
+	TIMEDEPENDENT_INCOMPRESSIBLE=3, ///< Timedependent incompressible material.
+      }; // MaterialBehaviorEnum
+      
       // PUBLIC METHODS /////////////////////////////////////////////////
     public :
       
@@ -131,6 +141,29 @@ namespace pylith {
        * @returns True if integrator generates symmetric Jacobian.
        */
       bool isJacobianSymmetric(void) const;
+
+      /** Set static/timedependent and compressible/incompressible behavior.
+       *
+       * @param value Enum that selects from different combinations.
+       */
+      virtual
+      void setMaterialBehavior(const MaterialBehaviorEnum value);
+
+      /** Check whether material has a field as a property.
+       *
+       * @param name Name of field.
+       *
+       * @returns True if material has field as a property, false otherwise.
+       */
+      bool hasProperty(const char* name);
+
+      /** Check whether material has a field as a state variable.
+       *
+       * @param name Name of field.
+       *
+       * @returns True if material has field as a state variable, false otherwise.
+       */
+      bool hasStateVar(const char* name);
 
       /** Get physical property or state variable field. Data is returned
        * via the argument.

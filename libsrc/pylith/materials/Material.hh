@@ -52,10 +52,10 @@ class pylith::materials::Material
 public :
 
   enum MaterialBehaviorEnum {
-    ELASTIC_COMPRESSIBLE=0, ///< Elastic compressible material.
-    INELASTIC_COMPRESSIBLE=1, ///< Inelastic compressible material.
-    ELASTIC_INCOMPRESSIBLE=2, ///< Elastic incompressible material.
-    INELASTIC_INCOMPRESSIBLE=3, ///< Inelastic incompressible material.
+    STATIC_COMPRESSIBLE=0, ///< Static compressible material.
+    TIMEDEPENDENT_COMPRESSIBLE=1, ///< Timedependent compressible material.
+    STATIC_INCOMPRESSIBLE=2, ///< Static incompressible material.
+    TIMEDEPENDENT_INCOMPRESSIBLE=3, ///< Timedependent incompressible material.
   }; // MaterialBehaviorEnum
 
   // PUBLIC METHODS /////////////////////////////////////////////////////
@@ -140,6 +140,12 @@ public :
    */
   void normalizer(const spatialdata::units::Nondimensional& dim);
 
+  /** Get size of stress/strain tensor associated with material.
+   *
+   * @returns Size of array holding stress/strain tensor.
+   */
+  int tensorSize(void) const;
+
   /** Initialize material by getting physical property parameters from
    * database.
    *
@@ -152,12 +158,6 @@ public :
   virtual
   void initialize(const topology::Mesh& mesh,
 		  feassemble::Quadrature* quadrature);
-  
-  /** Get size of stress/strain tensor associated with material.
-   *
-   * @returns Size of array holding stress/strain tensor.
-   */
-  int tensorSize(void) const;
 
   /** Get flag indicating whether Jacobian matrix must be reformed for
    * current state.
@@ -166,17 +166,17 @@ public :
    */
   bool needNewJacobian(void) const;
 
+  /// Reset flag indicating whether Jacobian matrix must be reformed for
+  /// current state.
+  void resetNeedNewJacobian(void);
+
    /** Check whether material generates a symmetric Jacobian.
     *
     * @returns True if material generates symmetric Jacobian.
     */
    bool isJacobianSymmetric(void) const;
 
-  /// Reset flag indicating whether Jacobian matrix must be reformed for
-  /// current state.
-  void resetNeedNewJacobian(void);
-
-  /** Set elastic/inelastic and compressible/incompressible behavior.
+  /** Set static/timedependent and compressible/incompressible behavior.
    *
    * @param value Enum that selects from different combinations.
    */

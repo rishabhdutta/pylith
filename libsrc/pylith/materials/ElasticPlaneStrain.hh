@@ -66,6 +66,12 @@ public :
   PylithScalar stableTimeStepImplicit(const topology::Mesh& mesh,
 				      topology::Field* field =0);
 
+  /** Set static/timedependent and compressible/incompressible behavior.
+   *
+   * @param value Enum that selects from different combinations.
+   */
+  void setMaterialBehavior(const MaterialBehaviorEnum value);
+
   // PROTECTED METHODS //////////////////////////////////////////////////
 protected :
 
@@ -200,6 +206,167 @@ protected :
 				       const int numStateVars,
 				       const double minCellWidth) const;
   
+// PRIVATE TYPEDEFS ////////////////////////////////////////////////////
+private :
+  /// Member prototype for _calcStress()
+  typedef void (pylith::materials::ElasticPlaneStrain::*calcStress_fn_type)
+    (PylithScalar* const,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const bool);
+
+/// Member prototype for _calcElasticConsts()
+  typedef void (pylith::materials::ElasticPlaneStrain::*calcElasticConsts_fn_type)
+    (PylithScalar* const,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int,
+     const PylithScalar*,
+     const int);
+
+// PRIVATE METHODS ////////////////////////////////////////////////////
+private :
+
+  /** Compute complete stress tensor from properties (compressible).
+   *
+   * @param stress Array for stress tensor.
+   * @param stressSize Size of stress tensor.
+   * @param properties Properties at location.
+   * @param numProperties Number of properties.
+   * @param stateVars State variables at location.
+   * @param numStateVars Number of state variables.
+   * @param totalStrain Total strain at location.
+   * @param strainSize Size of strain tensor.
+   * @param initialStress Initial stress tensor at location.
+   * @param initialStressSize Size of initial stress array.
+   * @param initialStrain Initial strain tensor at location.
+   * @param initialStrainSize Size of initial strain array.
+   * @param computeStateVars Flag indicating to compute updated state variables.
+   */
+  void _calcStressCompressible(PylithScalar* const stress,
+			       const int stressSize,
+			       const PylithScalar* properties,
+			       const int numProperties,
+			       const PylithScalar* stateVars,
+			       const int numStateVars,
+			       const PylithScalar* totalStrain,
+			       const int strainSize,
+			       const PylithScalar* initialStress,
+			       const int initialStressSize,
+			       const PylithScalar* initialStrain,
+			       const int initialStrainSize,
+			       const bool computeStateVars);
+
+/** Compute deviatoric stress tensor from properties (incompressible).
+   *
+   * @param stress Array for stress tensor.
+   * @param stressSize Size of stress tensor.
+   * @param properties Properties at location.
+   * @param numProperties Number of properties.
+   * @param stateVars State variables at location.
+   * @param numStateVars Number of state variables.
+   * @param totalStrain Total strain at location.
+   * @param strainSize Size of strain tensor.
+   * @param initialStress Initial stress tensor at location.
+   * @param initialStressSize Size of initial stress array.
+   * @param initialStrain Initial strain tensor at location.
+   * @param initialStrainSize Size of initial strain array.
+   * @param computeStateVars Flag indicating to compute updated state variables.
+   */
+  void _calcStressIncompressible(PylithScalar* const stress,
+				 const int stressSize,
+				 const PylithScalar* properties,
+				 const int numProperties,
+				 const PylithScalar* stateVars,
+				 const int numStateVars,
+				 const PylithScalar* totalStrain,
+				 const int strainSize,
+				 const PylithScalar* initialStress,
+				 const int initialStressSize,
+				 const PylithScalar* initialStrain,
+				 const int initialStrainSize,
+				 const bool computeStateVars);
+
+/** Compute derivatives of complete elasticity matrix (compressible).
+   *
+   * @param elasticConsts Array for elastic constants.
+   * @param numElasticConsts Number of elastic constants.
+   * @param properties Properties at location.
+   * @param numProperties Number of properties.
+   * @param stateVars State variables at location.
+   * @param numStateVars Number of state variables.
+   * @param totalStrain Total strain at location.
+   * @param strainSize Size of strain tensor.
+   * @param initialStress Initial stress tensor at location.
+   * @param initialStressSize Size of initial stress array.
+   * @param initialStrain Initial strain tensor at location.
+   * @param initialStrainSize Size of initial strain array.
+   */
+  void _calcElasticConstsCompressible(PylithScalar* const elasticConsts,
+				      const int numElasticConsts,
+				      const PylithScalar* properties,
+				      const int numProperties,
+				      const PylithScalar* stateVars,
+				      const int numStateVars,
+				      const PylithScalar* totalStrain,
+				      const int strainSize,
+				      const PylithScalar* initialStress,
+				      const int initialStressSize,
+				      const PylithScalar* initialStrain,
+				      const int initialStrainSize);
+
+/** Compute derivatives of deviatoric elasticity matrix (incompressible).
+   *
+   * @param elasticConsts Array for elastic constants.
+   * @param numElasticConsts Number of elastic constants.
+   * @param properties Properties at location.
+   * @param numProperties Number of properties.
+   * @param stateVars State variables at location.
+   * @param numStateVars Number of state variables.
+   * @param totalStrain Total strain at location.
+   * @param strainSize Size of strain tensor.
+   * @param initialStress Initial stress tensor at location.
+   * @param initialStressSize Size of initial stress array.
+   * @param initialStrain Initial strain tensor at location.
+   * @param initialStrainSize Size of initial strain array.
+   */
+  void _calcElasticConstsIncompressible(PylithScalar* const elasticConsts,
+					const int numElasticConsts,
+					const PylithScalar* properties,
+					const int numProperties,
+					const PylithScalar* stateVars,
+					const int numStateVars,
+					const PylithScalar* totalStrain,
+					const int strainSize,
+					const PylithScalar* initialStress,
+					const int initialStressSize,
+					const PylithScalar* initialStrain,
+					const int initialStrainSize);
+
+  // PRIVATE MEMBERS ////////////////////////////////////////////////////
+private :
+
+  /// Method to use for _calcElasticConsts().
+  calcElasticConsts_fn_type _calcElasticConstsFn;
+
+  /// Method to use for _calcStress().
+  calcStress_fn_type _calcStressFn;
+
   // PRIVATE MEMBERS ////////////////////////////////////////////////////
 private :
 

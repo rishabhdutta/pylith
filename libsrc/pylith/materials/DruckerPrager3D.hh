@@ -79,12 +79,11 @@ public :
    */
   void timeStep(const PylithScalar dt);
 
-  /** Set whether elastic or inelastic constitutive relations are used.
+  /** Set static/timedependent and compressible/incompressible behavior.
    *
-   * @param flag True to use elastic, false to use inelastic.
+   * @param value Enum that selects from different combinations.
    */
-  void useElasticBehavior(const bool flag);
-
+  void setMaterialBehavior(const MaterialBehaviorEnum value);
 
   // PROTECTED METHODS //////////////////////////////////////////////////
 protected :
@@ -335,19 +334,19 @@ private :
    * @param initialStrainSize Size of initial strain array.
    * @param computeStateVars Flag indicating to compute updated state vars.
    */
-  void _calcStressElastic(PylithScalar* const stress,
-			  const int stressSize,
-			  const PylithScalar* properties,
-			  const int numProperties,
-			  const PylithScalar* stateVars,
-			  const int numStateVars,
-			  const PylithScalar* totalStrain,
-			  const int strainSize,
-			  const PylithScalar* initialStress,
-			  const int initialStressSize,
-			  const PylithScalar* initialStrain,
-			  const int initialStrainSize,
-			  const bool computeStateVars);
+  void _calcStressElasticCompressible(PylithScalar* const stress,
+				      const int stressSize,
+				      const PylithScalar* properties,
+				      const int numProperties,
+				      const PylithScalar* stateVars,
+				      const int numStateVars,
+				      const PylithScalar* totalStrain,
+				      const int strainSize,
+				      const PylithScalar* initialStress,
+				      const int initialStressSize,
+				      const PylithScalar* initialStrain,
+				      const int initialStrainSize,
+				      const bool computeStateVars);
 
   /** Compute stress tensor from properties as an elastoplastic material.
    *
@@ -365,19 +364,19 @@ private :
    * @param initialStrainSize Size of initial strain array.
    * @param computeStateVars Flag indicating to compute updated state vars.
    */
-  void _calcStressElastoplastic(PylithScalar* const stress,
-				const int stressSize,
-				const PylithScalar* properties,
-				const int numProperties,
-				const PylithScalar* stateVars,
-				const int numStateVars,
-				const PylithScalar* totalStrain,
-				const int strainSize,
-				const PylithScalar* initialStress,
-				const int initialStressSize,
-				const PylithScalar* initialStrain,
-				const int initialStrainSize,
-				const bool computeStateVars);
+  void _calcStressElastoplasticCompressible(PylithScalar* const stress,
+					    const int stressSize,
+					    const PylithScalar* properties,
+					    const int numProperties,
+					    const PylithScalar* stateVars,
+					    const int numStateVars,
+					    const PylithScalar* totalStrain,
+					    const int strainSize,
+					    const PylithScalar* initialStress,
+					    const int initialStressSize,
+					    const PylithScalar* initialStrain,
+					    const int initialStrainSize,
+					    const bool computeStateVars);
 
   /** Compute derivatives of elasticity matrix from properties as an
    * elastic material.
@@ -395,18 +394,18 @@ private :
    * @param initialStrain Initial strain values.
    * @param initialStrainSize Size of initial strain array.
    */
-  void _calcElasticConstsElastic(PylithScalar* const elasticConsts,
-				 const int numElasticConsts,
-				 const PylithScalar* properties,
-				 const int numProperties,
-				 const PylithScalar* stateVars,
-				 const int numStateVars,
-				 const PylithScalar* totalStrain,
-				 const int strainSize,
-				 const PylithScalar* initialStress,
-				 const int initialStressSize,
-				 const PylithScalar* initialStrain,
-				 const int initialStrainSize);
+  void _calcElasticConstsElasticCompressible(PylithScalar* const elasticConsts,
+					     const int numElasticConsts,
+					     const PylithScalar* properties,
+					     const int numProperties,
+					     const PylithScalar* stateVars,
+					     const int numStateVars,
+					     const PylithScalar* totalStrain,
+					     const int strainSize,
+					     const PylithScalar* initialStress,
+					     const int initialStressSize,
+					     const PylithScalar* initialStrain,
+					     const int initialStrainSize);
 
   /** Compute derivatives of elasticity matrix from properties as an
    * elastoplastic material.
@@ -424,18 +423,19 @@ private :
    * @param initialStrain Initial strain values.
    * @param initialStrainSize Size of initial strain array.
    */
-  void _calcElasticConstsElastoplastic(PylithScalar* const elasticConsts,
-				       const int numElasticConsts,
-				       const PylithScalar* properties,
-				       const int numProperties,
-				       const PylithScalar* stateVars,
-				       const int numStateVars,
-				       const PylithScalar* totalStrain,
-				       const int strainSize,
-				       const PylithScalar* initialStress,
-				       const int initialStressSize,
-				       const PylithScalar* initialStrain,
-				       const int initialStrainSize);
+  void _calcElasticConstsElastoplasticCompressible(
+				PylithScalar* const elasticConsts,
+				const int numElasticConsts,
+				const PylithScalar* properties,
+				const int numProperties,
+				const PylithScalar* stateVars,
+				const int numStateVars,
+				const PylithScalar* totalStrain,
+				const int strainSize,
+				const PylithScalar* initialStress,
+				const int initialStressSize,
+				const PylithScalar* initialStrain,
+				const int initialStrainSize);
   
   /** Update state variables after solve as an elastic material.
    *
@@ -450,16 +450,16 @@ private :
    * @param initialStrain Initial strain values.
    * @param initialStrainSize Size of initial strain array.
    */
-  void _updateStateVarsElastic(PylithScalar* const stateVars,
-			       const int numStateVars,
-			       const PylithScalar* properties,
-			       const int numProperties,
-			       const PylithScalar* totalStrain,
-			       const int strainSize,
-			       const PylithScalar* initialStress,
-			       const int initialStressSize,
-			       const PylithScalar* initialStrain,
-			       const int initialStrainSize);
+  void _updateStateVarsElasticCompressible(PylithScalar* const stateVars,
+					   const int numStateVars,
+					   const PylithScalar* properties,
+					   const int numProperties,
+					   const PylithScalar* totalStrain,
+					   const int strainSize,
+					   const PylithScalar* initialStress,
+					   const int initialStressSize,
+					   const PylithScalar* initialStrain,
+					   const int initialStrainSize);
 
   /** Update state variables after solve as an elastoplastic material.
    *
@@ -470,16 +470,17 @@ private :
    * @param initialState Initial state values.
    * @param initialStateSize Size of initial state array.
    */
-  void _updateStateVarsElastoplastic(PylithScalar* const stateVars,
-				     const int numStateVars,
-				     const PylithScalar* properties,
-				     const int numProperties,
-				     const PylithScalar* totalStrain,
-				     const int strainSize,
-				     const PylithScalar* initialStress,
-				     const int initialStressSize,
-				     const PylithScalar* initialStrain,
-				     const int initialStrainSize);
+  void _updateStateVarsElastoplasticCompressible(
+					PylithScalar* const stateVars,
+					const int numStateVars,
+					const PylithScalar* properties,
+					const int numProperties,
+					const PylithScalar* totalStrain,
+					const int strainSize,
+					const PylithScalar* initialStress,
+					const int initialStressSize,
+					const PylithScalar* initialStrain,
+					const int initialStrainSize);
 
 
   // PRIVATE MEMBERS ////////////////////////////////////////////////////

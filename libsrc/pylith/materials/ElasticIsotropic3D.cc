@@ -94,11 +94,11 @@ pylith::materials::ElasticIsotropic3D::ElasticIsotropic3D(void) :
 			   _ElasticIsotropic3D::dbProperties,
 			   _ElasticIsotropic3D::numDBProperties,
 			   0, 0,
-			   0, 0))
+			   0, 0)),
   _calcElasticConstsFn(0),
   _calcStressFn(0)
 { // constructor
-  setMaterialBehavior(0);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -114,26 +114,30 @@ pylith::materials::ElasticIsotropic3D::setMaterialBehavior(
 						const MaterialBehaviorEnum value)
 { // setMaterialBehavior
   switch (value) {
-  case ELASTIC_COMPRESSIBLE :
+  case STATIC_COMPRESSIBLE :
     _calcStressFn =
       &pylith::materials::ElasticIsotropic3D::_calcStressCompressible;
     _calcElasticConstsFn =
       &pylith::materials::ElasticIsotropic3D::_calcElasticConstsCompressible;
-  case INELASTIC_COMPRESSIBLE :
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn =
       &pylith::materials::ElasticIsotropic3D::_calcStressCompressible;
     _calcElasticConstsFn =
       &pylith::materials::ElasticIsotropic3D::_calcElasticConstsCompressible;
-  case ELASTIC_INCOMPRESSIBLE :
+    break;
+  case STATIC_INCOMPRESSIBLE :
     _calcStressFn =
       &pylith::materials::ElasticIsotropic3D::_calcStressIncompressible;
     _calcElasticConstsFn =
       &pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible;
-  case INELASTIC_INCOMPRESSIBLE :
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
     _calcStressFn =
       &pylith::materials::ElasticIsotropic3D::_calcStressIncompressible;
     _calcElasticConstsFn =
       &pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible;
+    break;
   default:
     assert(0);
     throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
@@ -461,21 +465,21 @@ pylith::materials::ElasticIsotropic3D::_calcElasticConstsIncompressible(
 
   const PylithScalar mu2 = 2.0 * mu;
    
-  elasticConsts[ 0] = 2mu; // C1111
+  elasticConsts[ 0] = mu2; // C1111
   elasticConsts[ 1] = 0.0; // C1122
   elasticConsts[ 2] = 0.0; // C1133
   elasticConsts[ 3] = 0.0; // C1112
   elasticConsts[ 4] = 0.0; // C1123
   elasticConsts[ 5] = 0.0; // C1113
   elasticConsts[ 6] = 0.0; // C2211
-  elasticConsts[ 7] = 2mu; // C2222
+  elasticConsts[ 7] = mu2; // C2222
   elasticConsts[ 8] = 0.0; // C2233
   elasticConsts[ 9] = 0.0; // C2212
   elasticConsts[10] = 0.0; // C2223
   elasticConsts[11] = 0.0; // C2213
   elasticConsts[12] = 0.0; // C3311
   elasticConsts[13] = 0.0; // C3322
-  elasticConsts[14] = 2mu; // C3333
+  elasticConsts[14] = mu2; // C3333
   elasticConsts[15] = 0.0; // C3312
   elasticConsts[16] = 0.0; // C3323
   elasticConsts[17] = 0.0; // C3313

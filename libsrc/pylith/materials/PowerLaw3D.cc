@@ -168,7 +168,7 @@ pylith::materials::PowerLaw3D::PowerLaw3D(void) :
   _calcStressFn(0),
   _updateStateVarsFn(0)
 { // constructor
-  useElasticBehavior(false);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
 } // constructor
 
 // ----------------------------------------------------------------------
@@ -178,27 +178,41 @@ pylith::materials::PowerLaw3D::~PowerLaw3D(void)
 } // destructor
 
 // ----------------------------------------------------------------------
-// Set whether elastic or inelastic constitutive relations are used.
+// Set static/timedependent and compressible/incompressible behavior.
 void
-pylith::materials::PowerLaw3D::useElasticBehavior(const bool flag)
-{ // useElasticBehavior
-  if (flag) {
+pylith::materials::PowerLaw3D::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::PowerLaw3D::_calcStressElastic;
+      &pylith::materials::PowerLaw3D::_calcStressElasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::PowerLaw3D::_calcElasticConstsElastic;
+      &pylith::materials::PowerLaw3D::_calcElasticConstsElasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::PowerLaw3D::_updateStateVarsElastic;
-
-  } else {
+      &pylith::materials::PowerLaw3D::_updateStateVarsElasticCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::PowerLaw3D::_calcStressViscoelastic;
+      &pylith::materials::PowerLaw3D::_calcStressElastoplasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::PowerLaw3D::_calcElasticConstsViscoelastic;
+      &pylith::materials::PowerLaw3D::_calcElasticConstsElastoplasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::PowerLaw3D::_updateStateVarsViscoelastic;
-  } // if/else
-} // useElasticBehavior
+      &pylith::materials::PowerLaw3D::_updateStateVarsElastoplasticCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute properties from values in spatial database.
@@ -463,7 +477,7 @@ pylith::materials::PowerLaw3D::_stableTimeStepExplicit(const PylithScalar* prope
 // Compute stress tensor at location from properties as an elastic
 // material.
 void
-pylith::materials::PowerLaw3D::_calcStressElastic(
+pylith::materials::PowerLaw3D::_calcStressElasticCompressible(
 				         PylithScalar* const stress,
 					 const int stressSize,
 					 const PylithScalar* properties,
@@ -477,7 +491,7 @@ pylith::materials::PowerLaw3D::_calcStressElastic(
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize,
 					 const bool computeStateVars)
-{ // _calcStressElastic
+{ // _calcStressElasticCompressible
   assert(0 != stress);
   assert(_PowerLaw3D::tensorSize == stressSize);
   assert(0 != properties);
@@ -513,13 +527,13 @@ pylith::materials::PowerLaw3D::_calcStressElastic(
   stress[5] = mu2 * e13 + initialStress[5];
 
   PetscLogFlops(25);
-} // _calcStressElastic
+} // _calcStressElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties as a viscoelastic
 // material.
 void
-pylith::materials::PowerLaw3D::_calcStressViscoelastic(
+pylith::materials::PowerLaw3D::_calcStressViscoelasticCompressible(
 					PylithScalar* const stress,
 					const int stressSize,
 					const PylithScalar* properties,
@@ -533,7 +547,7 @@ pylith::materials::PowerLaw3D::_calcStressViscoelastic(
 					const PylithScalar* initialStrain,
 					const int initialStrainSize,
 					const bool computeStateVars)
-{ // _calcStressViscoelastic
+{ // _calcStressViscoelasticCompressible
   assert(0 != stress);
   assert(_PowerLaw3D::tensorSize == stressSize);
   assert(0 != properties);
@@ -703,7 +717,7 @@ pylith::materials::PowerLaw3D::_calcStressViscoelastic(
     memcpy(&stress[0], &stateVars[s_stress], tensorSize * sizeof(PylithScalar));
   } // else
 
-} // _calcStressViscoelastic
+} // _calcStressViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Effective stress function that computes effective stress function only
@@ -817,7 +831,7 @@ pylith::materials::PowerLaw3D::effStressFuncDerivFunc(PylithScalar* func,
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties.
 void
-pylith::materials::PowerLaw3D::_calcElasticConstsElastic(
+pylith::materials::PowerLaw3D::_calcElasticConstsElasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -830,7 +844,7 @@ pylith::materials::PowerLaw3D::_calcElasticConstsElastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsElastic
+{ // _calcElasticConstsElasticCompressible
   assert(0 != elasticConsts);
   assert(_PowerLaw3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -888,13 +902,13 @@ pylith::materials::PowerLaw3D::_calcElasticConstsElastic(
   elasticConsts[35] = mu2; // C1313
 
   PetscLogFlops(2);
-} // _calcElasticConstsElastic
+} // _calcElasticConstsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties
 // as a viscoelastic material.
 void
-pylith::materials::PowerLaw3D::_calcElasticConstsViscoelastic(
+pylith::materials::PowerLaw3D::_calcElasticConstsViscoelasticCompressible(
 				         PylithScalar* const elasticConsts,
 					 const int numElasticConsts,
 					 const PylithScalar* properties,
@@ -907,7 +921,7 @@ pylith::materials::PowerLaw3D::_calcElasticConstsViscoelastic(
 					 const int initialStressSize,
 					 const PylithScalar* initialStrain,
 					 const int initialStrainSize)
-{ // _calcElasticConstsViscoelastic
+{ // _calcElasticConstsViscoelasticCompressible
   assert(0 != elasticConsts);
   assert(_PowerLaw3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -1026,7 +1040,7 @@ pylith::materials::PowerLaw3D::_calcElasticConstsViscoelastic(
   // will be the same as for the elastic case. Otherwise, compute the tangent
   // matrix using the effective stress function algorithm.
   if (b == 0.0 && c == 0.0 && d == 0.0) {
-    _calcElasticConstsElastic(elasticConsts,
+    _calcElasticConstsElasticCompressible(elasticConsts,
 			      numElasticConsts,
 			      properties,
 			      numProperties,
@@ -1150,12 +1164,12 @@ pylith::materials::PowerLaw3D::_calcElasticConstsViscoelastic(
     elasticConsts[35] = dStress13dStrain13; // C1313
     PetscLogFlops(114);
   } // else
-} // _calcElasticConstsViscoelastic
+} // _calcElasticConstsViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::PowerLaw3D::_updateStateVarsElastic(
+pylith::materials::PowerLaw3D::_updateStateVarsElasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1166,7 +1180,7 @@ pylith::materials::PowerLaw3D::_updateStateVarsElastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsElastic
+{ // _updateStateVarsElasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -1198,12 +1212,12 @@ pylith::materials::PowerLaw3D::_updateStateVarsElastic(
   } // for
 
   _needNewJacobian = true;
-} // _updateStateVarsElastic
+} // _updateStateVarsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::PowerLaw3D::_updateStateVarsViscoelastic(
+pylith::materials::PowerLaw3D::_updateStateVarsViscoelasticCompressible(
 				    PylithScalar* const stateVars,
 				    const int numStateVars,
 				    const PylithScalar* properties,
@@ -1214,7 +1228,7 @@ pylith::materials::PowerLaw3D::_updateStateVarsViscoelastic(
 				    const int initialStressSize,
 				    const PylithScalar* initialStrain,
 				    const int initialStrainSize)
-{ // _updateStateVarsViscoelastic
+{ // _updateStateVarsViscoelasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -1377,6 +1391,6 @@ pylith::materials::PowerLaw3D::_updateStateVarsViscoelastic(
   _needNewJacobian = true;
   PetscLogFlops(14 + _tensorSize * 15);
 
-} // _updateStateVarsViscoelastic
+} // _updateStateVarsViscoelasticCompressible
 
 // End of file 

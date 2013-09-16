@@ -238,7 +238,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::GenMaxwellQpQsIsotropic3D(void) :
   _calcStressFn(0),
   _updateStateVarsFn(0)  
 { // constructor
-  useElasticBehavior(false);
+  setMaterialBehavior(STATIC_COMPRESSIBLE);
   _viscousDevStrain.resize(_GenMaxwellQpQsIsotropic3D::numMaxwellModels*_tensorSize);
   _viscousMeanStrain.resize(_GenMaxwellQpQsIsotropic3D::numMaxwellModels);
 } // constructor
@@ -250,27 +250,41 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::~GenMaxwellQpQsIsotropic3D(void)
 } // destructor
 
 // ----------------------------------------------------------------------
-// Set whether elastic or inelastic constitutive relations are used.
+// Set static/timedependent and compressible/incompressible behavior.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::useElasticBehavior(const bool flag)
-{ // useElasticBehavior
-  if (flag) {
+pylith::materials::GenMaxwellQpQsIsotropic3D::setMaterialBehavior(
+						const MaterialBehaviorEnum value)
+{ // setMaterialBehavior
+  switch (value) {
+  case STATIC_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElastic;
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElastic;
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElastic;
-
-  } else {
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElasticCompressible;
+    break;
+  case TIMEDEPENDENT_COMPRESSIBLE :
     _calcStressFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressViscoelastic;
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElastoplasticCompressible;
     _calcElasticConstsFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelastic;
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElastoplasticCompressible;
     _updateStateVarsFn = 
-      &pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsViscoelastic;
-  } // if/else
-} // useElasticBehavior
+      &pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElastoplasticCompressible;
+    break;
+  case STATIC_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  case TIMEDEPENDENT_INCOMPRESSIBLE :
+    assert(0);
+    throw std::logic_error("Incompressible behavior not implemented.");
+    break;
+  default:
+    assert(0);
+    throw std::logic_error("Unknown material behavior in setMaterialBehavior.");
+  } // switch
+} // setMaterialBehavior
 
 // ----------------------------------------------------------------------
 // Compute parameters from values in spatial database.
@@ -477,7 +491,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcDensity(PylithScalar* const d
 // Compute stress tensor at location from properties as an elastic
 // material.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElasticCompressible(
 					     PylithScalar* const stress,
 					     const int stressSize,
 					     const PylithScalar* properties,
@@ -491,7 +505,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElastic(
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize,
 					     const bool computeStateVars)
-{ // _calcStressElastic
+{ // _calcStressElasticCompressible
   assert(0 != stress);
   assert(_GenMaxwellQpQsIsotropic3D::tensorSize == stressSize);
   assert(0 != properties);
@@ -528,14 +542,14 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressElastic(
   stress[5] = mu2 * e13 + initialStress[5];
 
   PetscLogFlops(28);
-} // _calcStressElastic
+} // _calcStressElasticCompressible
 
 
 // ----------------------------------------------------------------------
 // Compute stress tensor at location from properties as a viscoelastic
 // material.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressViscoelastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressViscoelasticCompressible(
 					     PylithScalar* const stress,
 					     const int stressSize,
 					     const PylithScalar* properties,
@@ -549,7 +563,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressViscoelastic(
 					     const PylithScalar* initialStrain,
 					     const int initialStrainSize,
 					     const bool computeStateVars)
-{ // _calcStressViscoelastic
+{ // _calcStressViscoelasticCompressible
   assert(0 != stress);
   assert(_GenMaxwellQpQsIsotropic3D::tensorSize == stressSize);
   assert(0 != properties);
@@ -628,12 +642,12 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcStressViscoelastic(
   } // for
 
   PetscLogFlops(3 + numMaxwellModels*1 + tensorSize*(6 + numMaxwellModels));
-} // _calcStressViscoelastic
+} // _calcStressViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElasticCompressible(
 					PylithScalar* const elasticConsts,
 					const int numElasticConsts,
 					const PylithScalar* properties,
@@ -646,7 +660,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElastic(
 					const int initialStressSize,
 					const PylithScalar* initialStrain,
 					const int initialStrainSize)
-{ // _calcElasticConstsElastic
+{ // _calcElasticConstsElasticCompressible
   assert(0 != elasticConsts);
   assert(_GenMaxwellQpQsIsotropic3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -705,13 +719,13 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsElastic(
   elasticConsts[35] = mu2; // C1313
 
   PetscLogFlops(7);
-} // _calcElasticConstsElastic
+} // _calcElasticConstsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Compute derivative of elasticity matrix at location from properties
 // as a viscoelastic material.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelasticCompressible(
 					PylithScalar* const elasticConsts,
 					const int numElasticConsts,
 					const PylithScalar* properties,
@@ -724,7 +738,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelastic(
 					const int initialStressSize,
 					const PylithScalar* initialStrain,
 					const int initialStrainSize)
-{ // _calcElasticConstsViscoelastic
+{ // _calcElasticConstsViscoelasticCompressible
   assert(0 != elasticConsts);
   assert(_GenMaxwellQpQsIsotropic3D::numElasticConsts == numElasticConsts);
   assert(0 != properties);
@@ -812,7 +826,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelastic(
   elasticConsts[35] = mu2Eff; // C1313
 
 #if 0 // DEBUGGING
-  std::cout << "_calcElasticConstsViscoelastic" << std::endl
+  std::cout << "_calcElasticConstsViscoelasticCompressible" << std::endl
 	    << "  mu: " << muEff
 	    << ", muEff: " << muEff
 	    << ", k: " << bulkModulus
@@ -823,12 +837,12 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_calcElasticConstsViscoelastic(
 #endif
 
   PetscLogFlops(1 + numMaxwellModels*6 + 11);
-} // _calcElasticConstsViscoelastic
+} // _calcElasticConstsViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElasticCompressible(
 					    PylithScalar* const stateVars,
 					    const int numStateVars,
 					    const PylithScalar* properties,
@@ -839,7 +853,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElastic(
 					    const int initialStressSize,
 					    const PylithScalar* initialStrain,
 					    const int initialStrainSize)
-{ // _updateStateVarsElastic
+{ // _updateStateVarsElasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -883,12 +897,12 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsElastic(
   PetscLogFlops(3 + 2 * tensorSize);
 
   _needNewJacobian = true;
-} // _updateStateVarsElastic
+} // _updateStateVarsElasticCompressible
 
 // ----------------------------------------------------------------------
 // Update state variables.
 void
-pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsViscoelastic(
+pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsViscoelasticCompressible(
 					    PylithScalar* const stateVars,
 					    const int numStateVars,
 					    const PylithScalar* properties,
@@ -899,7 +913,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsViscoelastic(
 					    const int initialStressSize,
 					    const PylithScalar* initialStrain,
 					    const int initialStrainSize)
-{ // _updateStateVarsViscoelastic
+{ // _updateStateVarsViscoelasticCompressible
   assert(0 != stateVars);
   assert(_numVarsQuadPt == numStateVars);
   assert(0 != properties);
@@ -935,7 +949,7 @@ pylith::materials::GenMaxwellQpQsIsotropic3D::_updateStateVarsViscoelastic(
       _viscousMeanStrain[iModel];
 
   _needNewJacobian = false;
-} // _updateStateVarsViscoelastic
+} // _updateStateVarsViscoelasticCompressible
 
 // ----------------------------------------------------------------------
 // Get stable time step for implicit time integration.
