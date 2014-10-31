@@ -167,8 +167,23 @@ pylith::faults::FaultCohesive::adjustTopology(topology::Mesh* const mesh,
     topology::MeshOps::checkTopology(faultMesh);
 
   } catch (const std::exception& err) {
+    PetscInt cMax, fMax, eMax, vMax;
+    PetscInt vStart, vEnd, cStart, cEnd, eStart, eEnd, fStart, fEnd;
+    PetscErrorCode ierr = 0;
+    PetscDM dmMesh = mesh->dmMesh();assert(dmMesh);
+    ierr = DMPlexGetDepthStratum(dmMesh, 0, &vStart, &vEnd);PYLITH_CHECK_ERROR(ierr);
+    ierr = DMPlexGetDepthStratum(dmMesh, 1, &eStart, &eEnd);PYLITH_CHECK_ERROR(ierr);
+    ierr = DMPlexGetDepthStratum(dmMesh, 2, &fStart, &fEnd);PYLITH_CHECK_ERROR(ierr);
+    ierr = DMPlexGetDepthStratum(dmMesh, 3, &cStart, &cEnd);PYLITH_CHECK_ERROR(ierr);
+    ierr = DMPlexGetHybridBounds(dmMesh, &cMax, &fMax, &eMax, &vMax);PYLITH_CHECK_ERROR(ierr);
+
     std::ostringstream msg;
     msg << "Error occurred while adjusting topology to create cohesive cells for fault '" << label() << "'.\n"
+	<< "Mesh information:\n"
+	<< "VERTICES vStart: " << vStart << ", vEnd: " << vEnd << ", vMax: " << vMax << "\n"
+	<< "EDGES eStart: " << eStart << ", eEnd: " << eEnd << ", eMax: " << eMax << "\n"
+	<< "FACES fStart: " << fStart << ", fEnd: " << fEnd << ", fMax: " << fMax << "\n"
+	<< "CELLS cStart: " << cStart << ", cEnd: " << cEnd << ", cMax: " << cMax << "\n\n"
 	<< err.what();
     throw std::runtime_error(msg.str());
   }
